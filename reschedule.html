@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!--
+  KLP STUDIO — PROTOTYPE B.1 : Reschedule avec sélection de slots (portail parent)
+  Rendu statique pour validation visuelle (ouvrir dans un navigateur, mode mobile).
+
+  INTÉGRATION ODOO PRÉVUE :
+  - GET  /klp/reschedule/<token>          -> controller public, token signé contenant
+                                             l'id de klp.parent.lesson.confirmation
+  - POST /klp/reschedule/<token>/confirm  -> {slot_start} ; crée la demande, notifie
+                                             le staff + WhatsApp de confirmation
+  - Les slots viennent de la disponibilité du prof (même logique que
+    pending_slots_json côté serveur). Données mock dans SLOTS ci-dessous.
+  - Le lien arrive par WhatsApp via le bouton Reschedule.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KLP Studio — Reprogrammer le cours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Albert+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B2233; --paper:#FAF7F2; --plum:#714B67; --plum-deep:#5A3B52;
+    --brass:#C99B3F; --sage:#3E7C5B; --line:#E6DFD6; --muted:#7A7068;
+    --card:#FFFFFF; --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Albert Sans',system-ui,sans-serif; background:var(--paper);
+    color:var(--ink); min-height:100vh; display:flex; justify-content:center;
+  }
+  .app{width:100%; max-width:430px; padding:0 18px 130px}
+
+  /* ---------- entête ---------- */
+  header{padding:26px 2px 6px; display:flex; align-items:baseline; gap:10px}
+  .wordmark{font-family:'Fraunces',serif; font-weight:650; font-size:1.15rem; letter-spacing:.02em}
+  .wordmark .note{color:var(--brass)}
+  .eyebrow{font-size:.68rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--plum)}
+  h1{font-family:'Fraunces',serif; font-weight:650; font-size:1.7rem; line-height:1.15; padding:10px 2px 4px}
+  .lede{color:var(--muted); font-size:.92rem; padding:0 2px 18px}
+
+  /* ---------- ticket ---------- */
+  .ticket{
+    position:relative; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:18px 20px 16px; margin-bottom:26px;
+    box-shadow:0 10px 24px rgba(43,34,51,.07);
+  }
+  .ticket::before,.ticket::after{
+    content:""; position:absolute; width:18px; height:18px; border-radius:50%;
+    background:var(--paper); border:1px solid var(--line); top:50%; transform:translateY(-50%);
+  }
+  .ticket::before{left:-10px; border-left-color:transparent}
+  .ticket::after{right:-10px; border-right-color:transparent}
+  .ticket .tag{
+    display:inline-block; font-size:.66rem; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--plum); background:#F1E9EF;
+    padding:4px 9px; border-radius:99px; margin-bottom:10px;
+  }
+  .ticket.success .tag{color:var(--sage); background:#E8F1EC}
+  .student{font-family:'Fraunces',serif; font-weight:650; font-size:1.25rem}
+  .lesson-line{color:var(--muted); font-size:.92rem; margin-top:2px}
+  .ticket .when{
+    display:flex; gap:18px; border-top:1.5px dashed var(--line);
+    margin-top:14px; padding-top:12px;
+  }
+  .when div{flex:1}
+  .when .lbl{font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .when .val{font-weight:600; font-size:.95rem; margin-top:2px; font-variant-numeric:tabular-nums}
+  .when .val.strike{text-decoration:line-through; color:var(--muted); font-weight:500}
+
+  /* ---------- slots ---------- */
+  .day{margin-bottom:18px}
+  .day h2{
+    font-size:.78rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink); padding:0 2px 9px; display:flex; align-items:center; gap:8px;
+  }
+  .day h2 .rule{flex:1; height:1px; background:var(--line)}
+  .chips{display:flex; flex-wrap:wrap; gap:9px}
+  .chip{
+    font:inherit; font-weight:600; font-size:.92rem; font-variant-numeric:tabular-nums;
+    padding:11px 15px; border-radius:12px; border:1.5px solid var(--line);
+    background:var(--card); color:var(--ink); cursor:pointer;
+    transition:border-color .15s, background .15s, color .15s, transform .1s;
+  }
+  .chip:active{transform:scale(.97)}
+  .chip[aria-pressed="true"]{
+    background:var(--plum); border-color:var(--plum); color:#fff;
+  }
+  .chip:focus-visible{outline:3px solid var(--brass); outline-offset:2px}
+
+  /* ---------- barre de confirmation ---------- */
+  .bar{
+    position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center;
+    background:linear-gradient(to top, var(--paper) 75%, transparent);
+    padding:22px 18px 20px; pointer-events:none;
+  }
+  .bar-inner{width:100%; max-width:394px; pointer-events:auto}
+  .picked{
+    font-size:.85rem; color:var(--muted); text-align:center; padding-bottom:8px; min-height:1.4em;
+  }
+  .picked strong{color:var(--ink); font-variant-numeric:tabular-nums}
+  .confirm{
+    width:100%; font:inherit; font-weight:700; font-size:1.02rem; color:#fff;
+    background:var(--plum); border:0; border-radius:14px; padding:16px;
+    cursor:pointer; transition:background .15s, opacity .15s;
+    box-shadow:0 8px 20px rgba(113,75,103,.35);
+  }
+  .confirm:disabled{opacity:.35; box-shadow:none; cursor:not-allowed}
+  .confirm:not(:disabled):active{background:var(--plum-deep)}
+  .confirm:focus-visible{outline:3px solid var(--brass); outline-offset:2px}
+
+  /* ---------- succès ---------- */
+  .success-wrap{display:none; text-align:center; padding-top:6px}
+  .success-wrap .check{
+    width:54px; height:54px; border-radius:50%; background:var(--sage); color:#fff;
+    font-size:1.6rem; line-height:54px; margin:0 auto 14px;
+  }
+  .success-wrap h1{padding-bottom:6px}
+  .success-wrap p{color:var(--muted); font-size:.93rem; padding-bottom:22px}
+  .alt{
+    display:inline-block; margin-top:26px; font-size:.88rem; color:var(--plum);
+    font-weight:600; text-decoration:underline; text-underline-offset:3px;
+  }
+  .footer-note{padding-top:34px; text-align:center; color:var(--muted); font-size:.78rem}
+
+  @media (prefers-reduced-motion: no-preference){
+    .ticket{animation:rise .45s cubic-bezier(.2,.8,.3,1) both}
+    @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <span class="wordmark">KLP<span class="note"> ♪ </span>Studio</span>
+    <span class="eyebrow">Reprogrammation</span>
+  </header>
+
+  <!-- ============ ÉCRAN 1 : CHOIX DU CRÉNEAU ============ -->
+  <section id="screen-pick">
+    <h1>Choisissez un nouveau créneau</h1>
+    <p class="lede">Le cours ci-dessous sera déplacé vers l'horaire que vous sélectionnez.</p>
+
+    <div class="ticket" id="ticket">
+      <span class="tag">Cours à reprogrammer</span>
+      <div class="student">Jaden Harel</div>
+      <div class="lesson-line">Drum · avec Rick Cupidon · Studio B</div>
+      <div class="when">
+        <div>
+          <div class="lbl">Date</div>
+          <div class="val" id="t-date">Ven 13 juin</div>
+        </div>
+        <div>
+          <div class="lbl">Heure</div>
+          <div class="val" id="t-time">12:00 – 12:30</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="days"></div>
+  </section>
+
+  <!-- ============ ÉCRAN 2 : SUCCÈS ============ -->
+  <section class="success-wrap" id="screen-done">
+    <div class="check">✓</div>
+    <h1>Créneau réservé</h1>
+    <p>Le cours de <strong>Jaden</strong> est déplacé.<br>Vous recevrez la confirmation sur WhatsApp. 🙏</p>
+    <div class="ticket success">
+      <span class="tag">Nouveau créneau</span>
+      <div class="student">Jaden Harel</div>
+      <div class="lesson-line">Drum · avec Rick Cupidon · Studio B</div>
+      <div class="when">
+        <div>
+          <div class="lbl">Date</div>
+          <div class="val" id="n-date">—</div>
+        </div>
+        <div>
+          <div class="lbl">Heure</div>
+          <div class="val" id="n-time">—</div>
+        </div>
+      </div>
+    </div>
+    <a class="alt" href="https://wa.me/23059804605">Besoin d'un autre horaire ? Écrivez-nous</a>
+  </section>
+
+  <p class="footer-note">KLP Studio · Mapou, Maurice · +230 5980-4605</p>
+</div>
+
+<div class="bar" id="bar">
+  <div class="bar-inner">
+    <div class="picked" id="picked">Sélectionnez un créneau ci-dessus</div>
+    <button class="confirm" id="confirm" disabled>Confirmer ce créneau</button>
+  </div>
+</div>
+
+<script>
+/* Slots mock — viendront de la dispo du prof côté Odoo (pending_slots_json). */
+const SLOTS = [
+  { day: "Samedi 14 juin",  times: ["09:00", "09:30", "11:00", "15:30"] },
+  { day: "Lundi 16 juin",   times: ["13:00", "16:00", "16:30"] },
+  { day: "Mardi 17 juin",   times: ["12:00", "12:30", "17:00"] },
+];
+const DURATION_MIN = 30;
+
+const daysEl = document.getElementById("days");
+const pickedEl = document.getElementById("picked");
+const confirmBtn = document.getElementById("confirm");
+let selected = null;
+
+SLOTS.forEach(group => {
+  const sec = document.createElement("section");
+  sec.className = "day";
+  sec.innerHTML = `<h2>${group.day}<span class="rule"></span></h2>`;
+  const chips = document.createElement("div");
+  chips.className = "chips";
+  group.times.forEach(t => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    b.setAttribute("aria-pressed", "false");
+    b.textContent = t;
+    b.addEventListener("click", () => select(b, group.day, t));
+    chips.appendChild(b);
+  });
+  sec.appendChild(chips);
+  daysEl.appendChild(sec);
+});
+
+function endTime(t){
+  const [h, m] = t.split(":").map(Number);
+  const total = h * 60 + m + DURATION_MIN;
+  return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+}
+
+function select(btn, day, t){
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+  btn.setAttribute("aria-pressed", "true");
+  selected = { day, t };
+  pickedEl.innerHTML = `Nouveau créneau : <strong>${day} · ${t} – ${endTime(t)}</strong>`;
+  confirmBtn.disabled = false;
+}
+
+confirmBtn.addEventListener("click", () => {
+  if (!selected) return;
+  /* Intégration : POST /klp/reschedule/<token>/confirm {slot_start} */
+  document.getElementById("screen-pick").style.display = "none";
+  document.getElementById("bar").style.display = "none";
+  document.getElementById("n-date").textContent = selected.day;
+  document.getElementById("n-time").textContent = selected.t + " – " + endTime(selected.t);
+  document.getElementById("screen-done").style.display = "block";
+  window.scrollTo({ top: 0 });
+});
+</script>
+</body>
+</html>
