@@ -1,258 +1,325 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
 <!--
-  KLP STUDIO — PROTOTYPE B.1 : Reschedule avec sélection de slots (portail parent)
-  Rendu statique pour validation visuelle (ouvrir dans un navigateur, mode mobile).
+  KENNY LEONORE PRODUCTIONS — KLP STUDIO
+  PROTOTYPE B.1 v3 : RESCHEDULE AVEC SLOTS (portail parent)
+  Thèmes clair/sombre · FR/EN · téléphone + ordinateur
 
-  INTÉGRATION ODOO PRÉVUE :
-  - GET  /klp/reschedule/<token>          -> controller public, token signé contenant
-                                             l'id de klp.parent.lesson.confirmation
-  - POST /klp/reschedule/<token>/confirm  -> {slot_start} ; crée la demande, notifie
-                                             le staff + WhatsApp de confirmation
-  - Les slots viennent de la disponibilité du prof (même logique que
-    pending_slots_json côté serveur). Données mock dans SLOTS ci-dessous.
-  - Le lien arrive par WhatsApp via le bouton Reschedule.
+  INTÉGRATION ODOO :
+  - GET  /klp/reschedule/<token>  token signé -> klp.parent.lesson.confirmation
+    rend la session (calendar.event) + slots libres du prof
+  - POST /klp/reschedule/<token>/confirm {slot_start}
+    -> calendar.reschedule + notif staff + WhatsApp parent
+  - Lien envoyé via le bouton Reschedule du template WhatsApp
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KLP Studio — Reprogrammer le cours</title>
+<title>KLP Studio — Reprogrammer la session</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Albert+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#2B2233; --paper:#FAF7F2; --plum:#714B67; --plum-deep:#5A3B52;
-    --brass:#C99B3F; --sage:#3E7C5B; --line:#E6DFD6; --muted:#7A7068;
-    --card:#FFFFFF; --radius:18px;
+    --bg:#F5F3EE; --card:#FFFFFF; --ink:#1B1620; --muted:#6E6575;
+    --gold:#A8833C; --gold-strong:#8C6B2C; --line:#E5E0D6; --field:#FBFAF7;
+    --ok:#2E7D54; --shadow:0 14px 34px rgba(27,22,32,.08); --radius:16px;
+  }
+  [data-theme="dark"]{
+    --bg:#0E0C0F; --card:#17141A; --ink:#F4EFE6; --muted:#9B93A1;
+    --gold:#D4AF5E; --gold-strong:#E2C172; --line:rgba(244,239,230,.13);
+    --field:#0E0C0F; --ok:#69C08F; --shadow:0 14px 34px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box; margin:0; padding:0}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    font-family:'Albert Sans',system-ui,sans-serif; background:var(--paper);
-    color:var(--ink); min-height:100vh; display:flex; justify-content:center;
-  }
-  .app{width:100%; max-width:430px; padding:0 18px 130px}
+  body{font-family:'Instrument Sans',system-ui,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; transition:background .25s,color .25s}
+  button{font:inherit; cursor:pointer}
+  .wrap{max-width:1060px; margin:0 auto; padding:0 18px}
 
-  /* ---------- entête ---------- */
-  header{padding:26px 2px 6px; display:flex; align-items:baseline; gap:10px}
-  .wordmark{font-family:'Fraunces',serif; font-weight:650; font-size:1.15rem; letter-spacing:.02em}
-  .wordmark .note{color:var(--brass)}
-  .eyebrow{font-size:.68rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--plum)}
-  h1{font-family:'Fraunces',serif; font-weight:650; font-size:1.7rem; line-height:1.15; padding:10px 2px 4px}
-  .lede{color:var(--muted); font-size:.92rem; padding:0 2px 18px}
+  .topbar{display:flex; align-items:center; gap:12px; padding:14px 0}
+  .logo{width:44px; height:44px; border-radius:11px; background:#F4EFE6; display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none; border:1px solid var(--line)}
+  .logo img{width:84%; height:84%; object-fit:contain}
+  .brand{line-height:1.05; margin-right:auto}
+  .brand .l1{font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:.98rem; letter-spacing:.03em}
+  .brand .l2{font-size:.58rem; font-weight:700; letter-spacing:.4em; color:var(--gold)}
+  .seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--card)}
+  .seg button{border:0; background:transparent; color:var(--muted); font-weight:700; font-size:.78rem; padding:8px 12px}
+  .seg button[aria-pressed="true"]{background:var(--gold); color:#fff}
+  [data-theme="dark"] .seg button[aria-pressed="true"]{color:#0E0C0F}
+  .theme-btn{border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; width:38px; height:36px; font-size:1rem}
+  .seg button:focus-visible,.theme-btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 
-  /* ---------- ticket ---------- */
-  .ticket{
-    position:relative; background:var(--card); border:1px solid var(--line);
-    border-radius:var(--radius); padding:18px 20px 16px; margin-bottom:26px;
-    box-shadow:0 10px 24px rgba(43,34,51,.07);
-  }
-  .ticket::before,.ticket::after{
-    content:""; position:absolute; width:18px; height:18px; border-radius:50%;
-    background:var(--paper); border:1px solid var(--line); top:50%; transform:translateY(-50%);
-  }
-  .ticket::before{left:-10px; border-left-color:transparent}
-  .ticket::after{right:-10px; border-right-color:transparent}
-  .ticket .tag{
-    display:inline-block; font-size:.66rem; font-weight:700; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--plum); background:#F1E9EF;
-    padding:4px 9px; border-radius:99px; margin-bottom:10px;
-  }
-  .ticket.success .tag{color:var(--sage); background:#E8F1EC}
-  .student{font-family:'Fraunces',serif; font-weight:650; font-size:1.25rem}
-  .lesson-line{color:var(--muted); font-size:.92rem; margin-top:2px}
-  .ticket .when{
-    display:flex; gap:18px; border-top:1.5px dashed var(--line);
-    margin-top:14px; padding-top:12px;
-  }
+  .hero{position:relative; overflow:hidden}
+  .mosaic{display:grid; grid-template-columns:repeat(6,1fr); height:104px; filter:saturate(.92)}
+  .mosaic img{width:100%; height:100%; object-fit:cover; display:block}
+  .hero .veil{position:absolute; inset:0; background:linear-gradient(to bottom, rgba(14,12,15,.25), rgba(14,12,15,.68))}
+  .hero .title{position:absolute; inset:auto 0 13px 0; text-align:center; color:#F4EFE6}
+  .hero .title h1{font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(1.25rem,4vw,1.7rem)}
+  .hero .title p{font-size:.7rem; letter-spacing:.26em; color:#D4AF5E; font-weight:700; padding-top:3px}
+
+  .grid{display:grid; grid-template-columns:1fr; gap:18px; padding:20px 0 130px}
+  @media (min-width:880px){ .grid{grid-template-columns:1.6fr 1fr; align-items:start; padding-bottom:60px} }
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
+  .lede{color:var(--muted); font-size:.9rem; padding-bottom:18px}
+
+  .session{border:1px solid var(--line); border-radius:13px; padding:16px 18px; position:relative; overflow:hidden; background:var(--field); margin-bottom:22px}
+  .session::before{content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--gold)}
+  .session .tag{display:inline-block; font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--gold-strong); border:1px solid var(--gold); border-radius:99px; padding:4px 10px; margin-bottom:11px}
+  [data-theme="dark"] .session .tag{color:var(--gold)}
+  .session.ok .tag{color:var(--ok); border-color:var(--ok)}
+  .student{font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:1.3rem}
+  .lesson-line{color:var(--muted); font-size:.88rem; margin-top:3px}
+  .when{display:flex; gap:20px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px}
   .when div{flex:1}
-  .when .lbl{font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
-  .when .val{font-weight:600; font-size:.95rem; margin-top:2px; font-variant-numeric:tabular-nums}
-  .when .val.strike{text-decoration:line-through; color:var(--muted); font-weight:500}
+  .when .lbl{font-size:.6rem; letter-spacing:.18em; color:var(--muted); font-weight:700}
+  .when .val{font-weight:600; font-size:.95rem; margin-top:3px; font-variant-numeric:tabular-nums}
 
-  /* ---------- slots ---------- */
   .day{margin-bottom:18px}
-  .day h2{
-    font-size:.78rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--ink); padding:0 2px 9px; display:flex; align-items:center; gap:8px;
-  }
+  .day h2{font-size:.73rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; padding:0 2px 10px; display:flex; align-items:center; gap:10px}
   .day h2 .rule{flex:1; height:1px; background:var(--line)}
   .chips{display:flex; flex-wrap:wrap; gap:9px}
   .chip{
-    font:inherit; font-weight:600; font-size:.92rem; font-variant-numeric:tabular-nums;
-    padding:11px 15px; border-radius:12px; border:1.5px solid var(--line);
-    background:var(--card); color:var(--ink); cursor:pointer;
-    transition:border-color .15s, background .15s, color .15s, transform .1s;
+    font-weight:600; font-size:.92rem; font-variant-numeric:tabular-nums;
+    padding:12px 16px; border-radius:11px; border:1px solid var(--line);
+    background:var(--field); color:var(--ink); transition:all .14s;
   }
-  .chip:active{transform:scale(.97)}
-  .chip[aria-pressed="true"]{
-    background:var(--plum); border-color:var(--plum); color:#fff;
-  }
-  .chip:focus-visible{outline:3px solid var(--brass); outline-offset:2px}
+  .chip:active{transform:scale(.96)}
+  .chip[aria-pressed="true"]{background:var(--gold); border-color:var(--gold); color:#fff; font-weight:700}
+  [data-theme="dark"] .chip[aria-pressed="true"]{color:#0E0C0F}
+  .chip:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 
-  /* ---------- barre de confirmation ---------- */
-  .bar{
-    position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center;
-    background:linear-gradient(to top, var(--paper) 75%, transparent);
-    padding:22px 18px 20px; pointer-events:none;
-  }
-  .bar-inner{width:100%; max-width:394px; pointer-events:auto}
-  .picked{
-    font-size:.85rem; color:var(--muted); text-align:center; padding-bottom:8px; min-height:1.4em;
-  }
+  /* confirm : panneau collant a droite (ordi) / barre fixe (telephone) */
+  .confirm-card{position:sticky; top:14px}
+  .confirm-card h3{font-size:.66rem; font-weight:800; letter-spacing:.22em; color:var(--gold); padding-bottom:12px}
+  .picked{font-size:.88rem; color:var(--muted); padding-bottom:14px; min-height:2.6em}
   .picked strong{color:var(--ink); font-variant-numeric:tabular-nums}
   .confirm{
-    width:100%; font:inherit; font-weight:700; font-size:1.02rem; color:#fff;
-    background:var(--plum); border:0; border-radius:14px; padding:16px;
-    cursor:pointer; transition:background .15s, opacity .15s;
-    box-shadow:0 8px 20px rgba(113,75,103,.35);
+    width:100%; border:0; border-radius:12px; padding:16px; font-weight:800;
+    font-size:.96rem; letter-spacing:.03em; color:#fff; background:var(--gold);
+    box-shadow:0 10px 26px rgba(168,131,60,.3); transition:opacity .15s;
   }
+  [data-theme="dark"] .confirm{color:#0E0C0F}
   .confirm:disabled{opacity:.35; box-shadow:none; cursor:not-allowed}
-  .confirm:not(:disabled):active{background:var(--plum-deep)}
-  .confirm:focus-visible{outline:3px solid var(--brass); outline-offset:2px}
+  .confirm:not(:disabled):active{background:var(--gold-strong)}
+  .confirm:focus-visible{outline:3px solid var(--ink); outline-offset:2px}
+  .alt{display:inline-block; margin-top:16px; font-size:.85rem; color:var(--gold-strong); font-weight:700; text-decoration:underline; text-underline-offset:4px}
+  [data-theme="dark"] .alt{color:var(--gold)}
 
-  /* ---------- succès ---------- */
-  .success-wrap{display:none; text-align:center; padding-top:6px}
-  .success-wrap .check{
-    width:54px; height:54px; border-radius:50%; background:var(--sage); color:#fff;
-    font-size:1.6rem; line-height:54px; margin:0 auto 14px;
+  .mobile-bar{display:none}
+  @media (max-width:879px){
+    .confirm-card{display:none}
+    .mobile-bar{
+      display:flex; position:fixed; bottom:0; left:0; right:0; justify-content:center;
+      background:linear-gradient(to top, var(--bg) 72%, transparent);
+      padding:22px 18px 18px; pointer-events:none; z-index:5;
+    }
+    .mobile-bar .inner{width:100%; max-width:394px; pointer-events:auto}
+    .mobile-bar .picked{text-align:center; padding-bottom:8px; min-height:1.4em}
   }
-  .success-wrap h1{padding-bottom:6px}
-  .success-wrap p{color:var(--muted); font-size:.93rem; padding-bottom:22px}
-  .alt{
-    display:inline-block; margin-top:26px; font-size:.88rem; color:var(--plum);
-    font-weight:600; text-decoration:underline; text-underline-offset:3px;
-  }
-  .footer-note{padding-top:34px; text-align:center; color:var(--muted); font-size:.78rem}
 
+  .done{display:none; text-align:center; padding:26px 0 6px}
+  .done .check{width:56px; height:56px; border-radius:50%; border:2px solid var(--ok); color:var(--ok); font-size:1.5rem; line-height:53px; margin:0 auto 14px}
+  .done h2{font-family:'Bricolage Grotesque',sans-serif; font-size:1.55rem; padding-bottom:6px}
+  .done p{color:var(--muted); font-size:.92rem; padding-bottom:20px}
+  .done p strong{color:var(--ink)}
+  .done .session{text-align:left; max-width:430px; margin:0 auto}
+
+  footer{padding:30px 0 40px; text-align:center; color:var(--muted); font-size:.74rem; line-height:1.8}
+  footer a{color:var(--muted)}
+  .quote{text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.82rem; letter-spacing:.1em; color:var(--gold); padding-top:4px}
   @media (prefers-reduced-motion: no-preference){
-    .ticket{animation:rise .45s cubic-bezier(.2,.8,.3,1) both}
+    .card{animation:rise .4s cubic-bezier(.2,.8,.3,1) both}
     @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
   }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <header>
-    <span class="wordmark">KLP<span class="note"> ♪ </span>Studio</span>
-    <span class="eyebrow">Reprogrammation</span>
-  </header>
-
-  <!-- ============ ÉCRAN 1 : CHOIX DU CRÉNEAU ============ -->
-  <section id="screen-pick">
-    <h1>Choisissez un nouveau créneau</h1>
-    <p class="lede">Le cours ci-dessous sera déplacé vers l'horaire que vous sélectionnez.</p>
-
-    <div class="ticket" id="ticket">
-      <span class="tag">Cours à reprogrammer</span>
-      <div class="student">Jaden Harel</div>
-      <div class="lesson-line">Drum · avec Rick Cupidon · Studio B</div>
-      <div class="when">
-        <div>
-          <div class="lbl">Date</div>
-          <div class="val" id="t-date">Ven 13 juin</div>
-        </div>
-        <div>
-          <div class="lbl">Heure</div>
-          <div class="val" id="t-time">12:00 – 12:30</div>
-        </div>
-      </div>
+<div class="wrap">
+  <div class="topbar">
+    <span class="logo"><img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/64650d04a781d26e0f6f5c6a.png" alt="Kenny Leonore Productions"></span>
+    <div class="brand"><div class="l1">KENNY LEONORE</div><div class="l2">PRODUCTIONS</div></div>
+    <div class="seg" role="group" aria-label="Langue">
+      <button id="lang-fr" aria-pressed="true" onclick="setLang('fr')">FR</button>
+      <button id="lang-en" aria-pressed="false" onclick="setLang('en')">EN</button>
     </div>
-
-    <div id="days"></div>
-  </section>
-
-  <!-- ============ ÉCRAN 2 : SUCCÈS ============ -->
-  <section class="success-wrap" id="screen-done">
-    <div class="check">✓</div>
-    <h1>Créneau réservé</h1>
-    <p>Le cours de <strong>Jaden</strong> est déplacé.<br>Vous recevrez la confirmation sur WhatsApp. 🙏</p>
-    <div class="ticket success">
-      <span class="tag">Nouveau créneau</span>
-      <div class="student">Jaden Harel</div>
-      <div class="lesson-line">Drum · avec Rick Cupidon · Studio B</div>
-      <div class="when">
-        <div>
-          <div class="lbl">Date</div>
-          <div class="val" id="n-date">—</div>
-        </div>
-        <div>
-          <div class="lbl">Heure</div>
-          <div class="val" id="n-time">—</div>
-        </div>
-      </div>
-    </div>
-    <a class="alt" href="https://wa.me/23059804605">Besoin d'un autre horaire ? Écrivez-nous</a>
-  </section>
-
-  <p class="footer-note">KLP Studio · Mapou, Maurice · +230 5980-4605</p>
-</div>
-
-<div class="bar" id="bar">
-  <div class="bar-inner">
-    <div class="picked" id="picked">Sélectionnez un créneau ci-dessus</div>
-    <button class="confirm" id="confirm" disabled>Confirmer ce créneau</button>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Thème">🌙</button>
   </div>
 </div>
 
+<div class="hero">
+  <div class="mosaic" aria-hidden="true">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/6467e5db680f2647c441bd34.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125bd0a889095c8cdb0a.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647ae31ee283d58f515798e3.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647addceea3c6c7122b0c7af.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125b680f26669343977b.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647add7de283d5d19e5797ae.jpeg" alt="">
+  </div>
+  <div class="veil"></div>
+  <div class="title"><h1 data-i18n="hero">Reprogrammer la session</h1><p>KLP STUDIO · MAPOU</p></div>
+</div>
+
+<main class="wrap">
+  <div class="grid" id="grid">
+    <div>
+      <section class="card" id="screen-pick">
+        <p class="lede" data-i18n="lede">Choisissez un nouveau créneau — la session ci-dessous sera déplacée.</p>
+        <div class="session">
+          <span class="tag" data-i18n="tag_move">SESSION À DÉPLACER</span>
+          <div class="student">Jaden Harel</div>
+          <div class="lesson-line">Drum · Rick Cupidon · Studio B</div>
+          <div class="when">
+            <div><div class="lbl" data-i18n="lbl_date">DATE</div><div class="val" data-i18n="cur_date">Ven 13 juin</div></div>
+            <div><div class="lbl" data-i18n="lbl_time">HEURE</div><div class="val">12:00 – 12:30</div></div>
+          </div>
+        </div>
+        <div id="days"></div>
+      </section>
+
+      <section class="card done" id="screen-done">
+        <div class="check">✓</div>
+        <h2 data-i18n="d_title">Session re-bookée</h2>
+        <p><span data-i18n="d_sub">La session de <strong>Jaden</strong> est déplacée. La confirmation arrive sur votre WhatsApp.</span> 🙏</p>
+        <div class="session ok">
+          <span class="tag" data-i18n="tag_new">NOUVEAU CRÉNEAU</span>
+          <div class="student">Jaden Harel</div>
+          <div class="lesson-line">Drum · Rick Cupidon · Studio B</div>
+          <div class="when">
+            <div><div class="lbl" data-i18n="lbl_date">DATE</div><div class="val" id="n-date">—</div></div>
+            <div><div class="lbl" data-i18n="lbl_time">HEURE</div><div class="val" id="n-time">—</div></div>
+          </div>
+        </div>
+        <a class="alt" href="https://wa.me/23059804605" data-i18n="alt">Aucun horaire ne convient ? Écrivez-nous</a>
+      </section>
+    </div>
+
+    <aside class="card confirm-card" id="confirm-card">
+      <h3 data-i18n="c_title">VOTRE CHOIX</h3>
+      <div class="picked" id="picked-desktop"></div>
+      <button class="confirm" id="confirm-desktop" disabled data-i18n="c_btn">CONFIRMER CE CRÉNEAU</button>
+      <a class="alt" href="https://wa.me/23059804605" data-i18n="alt">Aucun horaire ne convient ? Écrivez-nous</a>
+    </aside>
+  </div>
+</main>
+
+<div class="mobile-bar" id="mobile-bar">
+  <div class="inner">
+    <div class="picked" id="picked-mobile"></div>
+    <button class="confirm" id="confirm-mobile" disabled data-i18n="c_btn">CONFIRMER CE CRÉNEAU</button>
+  </div>
+</div>
+
+<p class="quote">« INSPIRED MIND BY MAKING MUSIC »</p>
+<footer class="wrap">
+  Kenny Leonore Productions Ltd · Unit 8 Building 8, Quartier Des Serres, Rue Labourdonnais, Mapou<br>
+  <a href="tel:+23059804605">+230 5980-4605</a> · <a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a> ·
+  <a href="https://www.kennyleonore.com">kennyleonore.com</a>
+</footer>
+
 <script>
-/* Slots mock — viendront de la dispo du prof côté Odoo (pending_slots_json). */
-const SLOTS = [
-  { day: "Samedi 14 juin",  times: ["09:00", "09:30", "11:00", "15:30"] },
-  { day: "Lundi 16 juin",   times: ["13:00", "16:00", "16:30"] },
-  { day: "Mardi 17 juin",   times: ["12:00", "12:30", "17:00"] },
-];
+const I18N = {
+  fr: {
+    hero:"Reprogrammer la session",
+    lede:"Choisissez un nouveau créneau — la session ci-dessous sera déplacée.",
+    tag_move:"SESSION À DÉPLACER", tag_new:"NOUVEAU CRÉNEAU",
+    lbl_date:"DATE", lbl_time:"HEURE", cur_date:"Ven 13 juin",
+    c_title:"VOTRE CHOIX", c_btn:"CONFIRMER CE CRÉNEAU",
+    none:"Sélectionnez un créneau dans la liste.",
+    pick:"Nouveau créneau :",
+    d_title:"Session re-bookée",
+    d_sub:"La session de Jaden est déplacée. La confirmation arrive sur votre WhatsApp.",
+    alt:"Aucun horaire ne convient ? Écrivez-nous",
+    days:[["Samedi 14 juin",["09:00","09:30","11:00","15:30"]],["Lundi 16 juin",["13:00","16:00","16:30"]],["Mardi 17 juin",["12:00","12:30","17:00"]]],
+  },
+  en: {
+    hero:"Reschedule the session",
+    lede:"Pick a new time slot — the session below will be moved.",
+    tag_move:"SESSION TO MOVE", tag_new:"NEW SLOT",
+    lbl_date:"DATE", lbl_time:"TIME", cur_date:"Fri, June 13",
+    c_title:"YOUR PICK", c_btn:"CONFIRM THIS SLOT",
+    none:"Select a slot from the list.",
+    pick:"New slot:",
+    d_title:"Session rebooked",
+    d_sub:"Jaden's session has been moved. The confirmation is on its way to your WhatsApp.",
+    alt:"No slot works for you? Message us",
+    days:[["Saturday, June 14",["09:00","09:30","11:00","15:30"]],["Monday, June 16",["13:00","16:00","16:30"]],["Tuesday, June 17",["12:00","12:30","17:00"]]],
+  }
+};
 const DURATION_MIN = 30;
-
-const daysEl = document.getElementById("days");
-const pickedEl = document.getElementById("picked");
-const confirmBtn = document.getElementById("confirm");
+let lang = "fr";
 let selected = null;
+const t = k => I18N[lang][k];
 
-SLOTS.forEach(group => {
-  const sec = document.createElement("section");
-  sec.className = "day";
-  sec.innerHTML = `<h2>${group.day}<span class="rule"></span></h2>`;
-  const chips = document.createElement("div");
-  chips.className = "chips";
-  group.times.forEach(t => {
-    const b = document.createElement("button");
-    b.className = "chip";
-    b.type = "button";
-    b.setAttribute("aria-pressed", "false");
-    b.textContent = t;
-    b.addEventListener("click", () => select(b, group.day, t));
-    chips.appendChild(b);
+function toggleTheme(){
+  const h = document.documentElement;
+  const dark = h.getAttribute("data-theme") === "dark";
+  h.setAttribute("data-theme", dark ? "light" : "dark");
+  document.getElementById("theme-btn").textContent = dark ? "🌙" : "☀️";
+}
+function setLang(l){
+  lang = l; document.documentElement.lang = l;
+  document.getElementById("lang-fr").setAttribute("aria-pressed", l==="fr");
+  document.getElementById("lang-en").setAttribute("aria-pressed", l==="en");
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const k = el.dataset.i18n;
+    if (k === "d_sub"){ el.innerHTML = t(k).replace("Jaden", "<strong>Jaden</strong>"); }
+    else el.textContent = t(k);
   });
-  sec.appendChild(chips);
-  daysEl.appendChild(sec);
-});
-
-function endTime(t){
-  const [h, m] = t.split(":").map(Number);
-  const total = h * 60 + m + DURATION_MIN;
-  return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+  selected = null;
+  renderDays(); refreshPick();
 }
-
-function select(btn, day, t){
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
-  btn.setAttribute("aria-pressed", "true");
-  selected = { day, t };
-  pickedEl.innerHTML = `Nouveau créneau : <strong>${day} · ${t} – ${endTime(t)}</strong>`;
-  confirmBtn.disabled = false;
+function endTime(x){
+  const [h,m] = x.split(":").map(Number);
+  const tot = h*60+m+DURATION_MIN;
+  return String(Math.floor(tot/60)).padStart(2,"0")+":"+String(tot%60).padStart(2,"0");
 }
-
-confirmBtn.addEventListener("click", () => {
+function renderDays(){
+  const wrap = document.getElementById("days");
+  wrap.innerHTML = "";
+  t("days").forEach(([day, times]) => {
+    const sec = document.createElement("section");
+    sec.className = "day";
+    sec.innerHTML = `<h2>${day}<span class="rule"></span></h2>`;
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    times.forEach(x => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed","false");
+      b.textContent = x;
+      b.onclick = () => {
+        wrap.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed","false"));
+        b.setAttribute("aria-pressed","true");
+        selected = { day, t: x };
+        refreshPick();
+      };
+      chips.appendChild(b);
+    });
+    sec.appendChild(chips);
+    wrap.appendChild(sec);
+  });
+}
+function refreshPick(){
+  const html = selected
+    ? `${t("pick")} <strong>${selected.day} · ${selected.t} – ${endTime(selected.t)}</strong>`
+    : t("none");
+  ["picked-desktop","picked-mobile"].forEach(id => document.getElementById(id).innerHTML = html);
+  ["confirm-desktop","confirm-mobile"].forEach(id => document.getElementById(id).disabled = !selected);
+}
+function doConfirm(){
   if (!selected) return;
   /* Intégration : POST /klp/reschedule/<token>/confirm {slot_start} */
   document.getElementById("screen-pick").style.display = "none";
-  document.getElementById("bar").style.display = "none";
+  document.getElementById("confirm-card").style.display = "none";
+  document.getElementById("mobile-bar").style.display = "none";
   document.getElementById("n-date").textContent = selected.day;
   document.getElementById("n-time").textContent = selected.t + " – " + endTime(selected.t);
   document.getElementById("screen-done").style.display = "block";
-  window.scrollTo({ top: 0 });
-});
+  window.scrollTo({top:0});
+}
+document.getElementById("confirm-desktop").onclick = doConfirm;
+document.getElementById("confirm-mobile").onclick = doConfirm;
+renderDays(); refreshPick();
 </script>
 </body>
 </html>
