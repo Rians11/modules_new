@@ -48,7 +48,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:clip;max-width:100%}
-body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);transition:background .25s,color .25s}
+body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);transition:background .25s,color .25s;min-height:100dvh;display:flex;flex-direction:column}
+main{flex:1 0 auto}
+footer{margin-top:auto}
 img,svg{max-width:100%}
 button{font:inherit;cursor:pointer}
 .wrap{max-width:1080px;margin:0 auto;padding:0 16px}
@@ -150,9 +152,9 @@ main{padding:20px 0 132px}
 .mrow .new{font-weight:800;color:var(--ok)}
 
 /* ===== PIED DE PAGE ===== */
-footer{background:var(--card);margin-top:14px}
+footer{background:var(--card)}
 .fgrid{display:grid;grid-template-columns:1fr;gap:22px;padding:26px 0}
-@media(min-width:720px){.fgrid{grid-template-columns:1.3fr 1fr 1fr}}
+@media(min-width:720px){.fgrid{grid-template-columns:1.5fr 1fr}}
 .fcol h4{font-size:.68rem;font-weight:800;letter-spacing:.22em;color:var(--red);padding-bottom:10px}
 .fcol p,.fcol a{color:var(--muted);font-size:.85rem;line-height:1.9;text-decoration:none;display:block}
 .fcol a:hover{color:var(--red)}
@@ -196,8 +198,8 @@ footer{background:var(--card);margin-top:14px}
         <div class="wh" id="oldwh">Ven 13 juin · 12:00 – 12:30</div>
       </div>
       <div class="role" role="group">
-        <button id="r-parent" aria-pressed="true" onclick="setRole('parent')" data-i18n="r_p">👨‍👩‍👧 Côté parent</button>
-        <button id="r-teacher" aria-pressed="false" onclick="setRole('teacher')" data-i18n="r_t">🎵 Côté professeur</button>
+        <button id="r-parent" aria-pressed="true" onclick="setRole('parent')" data-i18n="r_p">Côté parent</button>
+        <button id="r-teacher" aria-pressed="false" onclick="setRole('teacher')" data-i18n="r_t">Côté professeur</button>
       </div>
       <p class="rolenote" id="rolenote"></p>
       <div class="cal-head">
@@ -261,7 +263,7 @@ footer{background:var(--card);margin-top:14px}
           </a>
         </div>
       </div>
-      <div class="fcol"><h4>CONTACT</h4><p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p><a href="tel:+23059804605">+230 5980-4605</a><a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a></div>
+      <div class="fcol"><h4>CONTACT</h4><p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p><a href="tel:+23059804605">+230 5980-4605</a><a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a><a href="https://www.kennyleonore.com">kennyleonore.com</a></div>
     </div>
     <div class="fbot"><span>© 2026 Kenny Leonore Productions Ltd</span><span>KLP Studio · Mapou</span></div>
   </div>
@@ -332,7 +334,6 @@ const I18N = {fr:{
   d_t:"Cette session est reprogrammée",d_s:"La confirmation arrive sur WhatsApp pour les deux parties. 🙏",
   m_w:"Quoi",m_t:"Prof",m_q:"Quand",
   f_slo:"« Inspired mind by making music » — studio professionnel et école de musique à Maurice.",
-  f_f:"LIENS",f_l1:"Inscription en ligne",f_l2:"Tarifs",
   dows:["Lu","Ma","Me","Je","Ve","Sa","Di"],
   months:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
   old:"Ven 13 juin · 12:00 – 12:30",
@@ -350,7 +351,6 @@ const I18N = {fr:{
   d_t:"This session is rescheduled",d_s:"The confirmation is on its way to both parties on WhatsApp. 🙏",
   m_w:"What",m_t:"Teacher",m_q:"When",
   f_slo:"“Inspired mind by making music” — professional studio and music school in Mauritius.",
-  f_f:"LINKS",f_l1:"Online enrollment",f_l2:"Pricing",
   dows:["Mo","Tu","We","Th","Fr","Sa","Su"],
   months:["January","February","March","April","May","June","July","August","September","October","November","December"],
   old:"Fri, June 13 · 12:00 – 12:30",
