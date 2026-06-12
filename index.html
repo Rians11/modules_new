@@ -3,251 +3,309 @@
 <head>
 <!--
   KENNY LEONORE PRODUCTIONS — KLP STUDIO
-  PROTOTYPE B.1 v3 : RESCHEDULE AVEC SLOTS (portail parent)
-  Thèmes clair/sombre · FR/EN · téléphone + ordinateur
+  MODULE B.1 v4 : RESCHEDULE (portail parent)
+  Concept : le CALENDRIER des sessions Odoo, exporté avec un vrai design —
+  grille mensuelle + créneaux du jour (style booking), et la session traitée
+  comme un TICKET DE CINÉMA (ancien horaire barré -> nouveau, code-barres).
+  Header / corps / footer complets. Thèmes blanc-rouge KLP + sombre. FR/EN.
 
   INTÉGRATION ODOO :
-  - GET  /klp/reschedule/<token>  token signé -> klp.parent.lesson.confirmation
-    rend la session (calendar.event) + slots libres du prof
+  - GET  /klp/reschedule/<token>   token signé -> klp.parent.lesson.confirmation
+       renvoie session (calendar.event) + disponibilités du prof par date
+       (même moteur que les slots du flux WhatsApp / pending_slots_json)
   - POST /klp/reschedule/<token>/confirm {slot_start}
-    -> calendar.reschedule + notif staff + WhatsApp parent
-  - Lien envoyé via le bouton Reschedule du template WhatsApp
+       -> calendar.reschedule + notif staff + WhatsApp parent
+  - AVAILABILITY ci-dessous = mock {date: [heures]} à remplacer par l'API.
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KLP Studio — Reprogrammer la session</title>
+<title>KLP Studio — Reschedule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F5F3EE; --card:#FFFFFF; --ink:#1B1620; --muted:#6E6575;
-    --gold:#A8833C; --gold-strong:#8C6B2C; --line:#E5E0D6; --field:#FBFAF7;
-    --ok:#2E7D54; --shadow:0 14px 34px rgba(27,22,32,.08); --radius:16px;
+    --bg:#FBFAF9; --card:#FFFFFF; --ink:#16121A; --muted:#6F6873;
+    --red:#B11226; --red-deep:#8C0E1F; --red-soft:#FBEAEC;
+    --line:#EBE5E3; --field:#FAF7F6; --ok:#2E7D54;
+    --shadow:0 14px 36px rgba(22,18,26,.09); --radius:16px;
   }
   [data-theme="dark"]{
-    --bg:#0E0C0F; --card:#17141A; --ink:#F4EFE6; --muted:#9B93A1;
-    --gold:#D4AF5E; --gold-strong:#E2C172; --line:rgba(244,239,230,.13);
-    --field:#0E0C0F; --ok:#69C08F; --shadow:0 14px 34px rgba(0,0,0,.45);
+    --bg:#131015; --card:#1C171C; --ink:#F6F2F1; --muted:#9C939B;
+    --red:#E8425A; --red-deep:#F26A7D; --red-soft:#33141B;
+    --line:rgba(246,242,241,.13); --field:#131015; --ok:#6AC495;
+    --shadow:0 14px 36px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box; margin:0; padding:0}
-  body{font-family:'Instrument Sans',system-ui,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; transition:background .25s,color .25s}
+  body{font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); transition:background .25s,color .25s}
   button{font:inherit; cursor:pointer}
-  .wrap{max-width:1060px; margin:0 auto; padding:0 18px}
+  .wrap{max-width:1100px; margin:0 auto; padding:0 20px}
 
-  .topbar{display:flex; align-items:center; gap:12px; padding:14px 0}
-  .logo{width:44px; height:44px; border-radius:11px; background:#F4EFE6; display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none; border:1px solid var(--line)}
-  .logo img{width:84%; height:84%; object-fit:contain}
-  .brand{line-height:1.05; margin-right:auto}
-  .brand .l1{font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:.98rem; letter-spacing:.03em}
-  .brand .l2{font-size:.58rem; font-weight:700; letter-spacing:.4em; color:var(--gold)}
+  /* ===== header ===== */
+  .topbar{position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+  .topbar .in{display:flex; align-items:center; gap:14px; padding:11px 0}
+  .logo{width:46px; height:46px; border-radius:12px; background:#fff; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none; transition:transform .25s}
+  .logo:hover{transform:rotate(-4deg) scale(1.05)}
+  .logo img{width:86%; height:86%; object-fit:contain}
+  .brand{line-height:1.02; margin-right:auto}
+  .brand .l1{font-family:'Archivo'; font-weight:900; font-size:1rem}
+  .brand .l2{font-size:.56rem; font-weight:700; letter-spacing:.42em; color:var(--red)}
   .seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--card)}
-  .seg button{border:0; background:transparent; color:var(--muted); font-weight:700; font-size:.78rem; padding:8px 12px}
-  .seg button[aria-pressed="true"]{background:var(--gold); color:#fff}
-  [data-theme="dark"] .seg button[aria-pressed="true"]{color:#0E0C0F}
-  .theme-btn{border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; width:38px; height:36px; font-size:1rem}
-  .seg button:focus-visible,.theme-btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .seg button{border:0; background:transparent; color:var(--muted); font-weight:700; font-size:.76rem; padding:8px 11px}
+  .seg button[aria-pressed="true"]{background:var(--red); color:#fff}
+  .theme-btn{border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; width:38px; height:36px; transition:transform .2s}
+  .theme-btn:hover{transform:rotate(15deg)}
+  .seg button:focus-visible,.theme-btn:focus-visible{outline:3px solid var(--red); outline-offset:2px}
 
-  .hero{position:relative; overflow:hidden}
-  .mosaic{display:grid; grid-template-columns:repeat(6,1fr); height:104px; filter:saturate(.92)}
-  .mosaic img{width:100%; height:100%; object-fit:cover; display:block}
-  .hero .veil{position:absolute; inset:0; background:linear-gradient(to bottom, rgba(14,12,15,.25), rgba(14,12,15,.68))}
-  .hero .title{position:absolute; inset:auto 0 13px 0; text-align:center; color:#F4EFE6}
-  .hero .title h1{font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:clamp(1.25rem,4vw,1.7rem)}
-  .hero .title p{font-size:.7rem; letter-spacing:.26em; color:#D4AF5E; font-weight:700; padding-top:3px}
+  /* ===== bandeau titre ===== */
+  .pagehead{background:linear-gradient(120deg, var(--red), var(--red-deep)); color:#fff; text-align:center; padding:30px 16px 32px}
+  .pagehead .kicker{font-size:.64rem; font-weight:800; letter-spacing:.3em; opacity:.92}
+  .pagehead h1{font-family:'Archivo'; font-weight:900; font-size:clamp(1.6rem,4.5vw,2.3rem); padding-top:6px}
 
-  .grid{display:grid; grid-template-columns:1fr; gap:18px; padding:20px 0 130px}
-  @media (min-width:880px){ .grid{grid-template-columns:1.6fr 1fr; align-items:start; padding-bottom:60px} }
+  /* ===== corps ===== */
+  .grid{display:grid; grid-template-columns:1fr; gap:20px; padding:26px 0 120px}
+  @media (min-width:920px){ .grid{grid-template-columns:1.45fr 1fr; align-items:start; padding-bottom:60px} }
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px}
+  .card h2{font-family:'Archivo'; font-weight:800; font-size:1.12rem; padding-bottom:4px}
+  .card .sub{color:var(--muted); font-size:.86rem; padding-bottom:16px}
 
-  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
-  .lede{color:var(--muted); font-size:.9rem; padding-bottom:18px}
-
-  .session{border:1px solid var(--line); border-radius:13px; padding:16px 18px; position:relative; overflow:hidden; background:var(--field); margin-bottom:22px}
-  .session::before{content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--gold)}
-  .session .tag{display:inline-block; font-size:.6rem; font-weight:800; letter-spacing:.2em; color:var(--gold-strong); border:1px solid var(--gold); border-radius:99px; padding:4px 10px; margin-bottom:11px}
-  [data-theme="dark"] .session .tag{color:var(--gold)}
-  .session.ok .tag{color:var(--ok); border-color:var(--ok)}
-  .student{font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:1.3rem}
-  .lesson-line{color:var(--muted); font-size:.88rem; margin-top:3px}
-  .when{display:flex; gap:20px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px}
-  .when div{flex:1}
-  .when .lbl{font-size:.6rem; letter-spacing:.18em; color:var(--muted); font-weight:700}
-  .when .val{font-weight:600; font-size:.95rem; margin-top:3px; font-variant-numeric:tabular-nums}
-
-  .day{margin-bottom:18px}
-  .day h2{font-size:.73rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; padding:0 2px 10px; display:flex; align-items:center; gap:10px}
-  .day h2 .rule{flex:1; height:1px; background:var(--line)}
-  .chips{display:flex; flex-wrap:wrap; gap:9px}
-  .chip{
-    font-weight:600; font-size:.92rem; font-variant-numeric:tabular-nums;
-    padding:12px 16px; border-radius:11px; border:1px solid var(--line);
-    background:var(--field); color:var(--ink); transition:all .14s;
+  /* calendrier */
+  .cal-head{display:flex; align-items:center; justify-content:space-between; padding-bottom:12px}
+  .cal-head .mo{font-family:'Archivo'; font-weight:800; font-size:1rem}
+  .cal-head button{width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
+    background:var(--field); color:var(--ink); font-weight:800; transition:all .2s}
+  .cal-head button:hover:not(:disabled){border-color:var(--red); color:var(--red); transform:scale(1.08)}
+  .cal-head button:disabled{opacity:.3; cursor:not-allowed}
+  .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; text-align:center}
+  .cal .dow{font-size:.64rem; font-weight:800; letter-spacing:.1em; color:var(--muted); padding:6px 0}
+  .cal .day{
+    aspect-ratio:1; border-radius:10px; border:1px solid transparent; background:transparent;
+    font-weight:600; font-size:.88rem; font-variant-numeric:tabular-nums; color:var(--muted);
+    position:relative; transition:all .18s; display:flex; align-items:center; justify-content:center;
   }
-  .chip:active{transform:scale(.96)}
-  .chip[aria-pressed="true"]{background:var(--gold); border-color:var(--gold); color:#fff; font-weight:700}
-  [data-theme="dark"] .chip[aria-pressed="true"]{color:#0E0C0F}
-  .chip:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .cal .day.av{color:var(--ink); background:var(--field); border-color:var(--line); cursor:pointer}
+  .cal .day.av::after{content:""; position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; border-radius:50%; background:var(--red)}
+  .cal .day.av:hover{border-color:var(--red); transform:scale(1.07); box-shadow:0 6px 14px rgba(177,18,38,.16)}
+  .cal .day.sel{background:var(--red); color:#fff; border-color:var(--red); animation:pop .3s}
+  .cal .day.sel::after{background:#fff}
+  .cal .day.today{outline:2px dashed var(--red); outline-offset:-2px}
+  @keyframes pop{50%{transform:scale(1.12)}}
+  .cal .day:focus-visible{outline:3px solid var(--red); outline-offset:2px}
 
-  /* confirm : panneau collant a droite (ordi) / barre fixe (telephone) */
-  .confirm-card{position:sticky; top:14px}
-  .confirm-card h3{font-size:.66rem; font-weight:800; letter-spacing:.22em; color:var(--gold); padding-bottom:12px}
-  .picked{font-size:.88rem; color:var(--muted); padding-bottom:14px; min-height:2.6em}
-  .picked strong{color:var(--ink); font-variant-numeric:tabular-nums}
-  .confirm{
-    width:100%; border:0; border-radius:12px; padding:16px; font-weight:800;
-    font-size:.96rem; letter-spacing:.03em; color:#fff; background:var(--gold);
-    box-shadow:0 10px 26px rgba(168,131,60,.3); transition:opacity .15s;
+  .slots-h{font-size:.72rem; font-weight:800; letter-spacing:.16em; color:var(--red); padding:18px 0 10px; min-height:1.2em}
+  .chips{display:flex; flex-wrap:wrap; gap:9px; min-height:2.6em}
+  .chip{font-weight:700; font-size:.92rem; font-variant-numeric:tabular-nums; padding:12px 16px;
+    border-radius:11px; border:1px solid var(--line); background:var(--field); color:var(--ink); transition:all .16s}
+  .chip:hover{border-color:var(--red); transform:translateY(-2px); box-shadow:0 8px 16px rgba(177,18,38,.14)}
+  .chip[aria-pressed="true"]{background:var(--red); border-color:var(--red); color:#fff; animation:pop .3s}
+  .chip:focus-visible{outline:3px solid var(--red); outline-offset:2px}
+  .noslot{color:var(--muted); font-size:.85rem; font-style:italic}
+
+  /* ===== TICKET CINÉMA ===== */
+  .ticket-wrap{position:sticky; top:74px}
+  @media (max-width:919px){ .ticket-wrap{position:static} }
+  .ticket{
+    position:relative; background:var(--card); border:1px solid var(--line); border-radius:18px;
+    box-shadow:var(--shadow); overflow:hidden; transition:transform .3s;
   }
-  [data-theme="dark"] .confirm{color:#0E0C0F}
+  .ticket:hover{transform:rotate(-.6deg) translateY(-2px)}
+  .ticket .top{background:linear-gradient(120deg, var(--red), var(--red-deep)); color:#fff; padding:16px 20px;
+    display:flex; justify-content:space-between; align-items:center}
+  .ticket .top .adm{font-size:.6rem; font-weight:800; letter-spacing:.32em}
+  .ticket .top .klp{font-family:'Archivo'; font-weight:900; font-size:.9rem}
+  .ticket .body{padding:18px 20px 8px}
+  .ticket .student{font-family:'Archivo'; font-weight:900; font-size:1.4rem}
+  .ticket .line{color:var(--muted); font-size:.86rem; padding-top:3px}
+  .ticket .perfo{position:relative; border-top:2px dashed var(--line); margin:16px 0 0}
+  .ticket .perfo::before,.ticket .perfo::after{content:""; position:absolute; top:-11px; width:22px; height:22px;
+    border-radius:50%; background:var(--bg); border:1px solid var(--line)}
+  .ticket .perfo::before{left:-13px} .ticket .perfo::after{right:-13px}
+  .ticket .when{padding:16px 20px 6px}
+  .ticket .when .k{font-size:.6rem; letter-spacing:.2em; font-weight:800; color:var(--muted); padding-bottom:4px}
+  .ticket .old{color:var(--muted); text-decoration:line-through; font-size:.9rem; font-variant-numeric:tabular-nums}
+  .ticket .new{font-weight:800; font-size:1.02rem; color:var(--red); font-variant-numeric:tabular-nums; padding-top:2px; min-height:1.4em}
+  .ticket .new.placeholder{color:var(--muted); font-weight:500; font-style:italic; font-size:.86rem}
+  .ticket .barcode{height:42px; margin:14px 20px 18px; border-radius:5px; opacity:.85;
+    background:repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 9px, transparent 9px 11px, var(--ink) 11px 12px, transparent 12px 16px)}
+  .ticket .ref{font-size:.62rem; letter-spacing:.18em; color:var(--muted); text-align:center; padding-bottom:14px}
+
+  .confirm{width:100%; margin-top:14px; border:0; border-radius:13px; padding:16px; font-weight:800;
+    font-size:.95rem; letter-spacing:.04em; color:#fff; background:var(--red);
+    box-shadow:0 10px 26px rgba(177,18,38,.32); position:relative; overflow:hidden; transition:transform .15s}
+  .confirm::after{content:""; position:absolute; top:0; left:-80%; width:50%; height:100%;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform:skewX(-20deg); transition:left .5s}
+  .confirm:not(:disabled):hover::after{left:130%}
+  .confirm:not(:disabled):hover{transform:translateY(-2px)}
   .confirm:disabled{opacity:.35; box-shadow:none; cursor:not-allowed}
-  .confirm:not(:disabled):active{background:var(--gold-strong)}
   .confirm:focus-visible{outline:3px solid var(--ink); outline-offset:2px}
-  .alt{display:inline-block; margin-top:16px; font-size:.85rem; color:var(--gold-strong); font-weight:700; text-decoration:underline; text-underline-offset:4px}
-  [data-theme="dark"] .alt{color:var(--gold)}
+  .alt{display:block; text-align:center; margin-top:14px; font-size:.84rem; color:var(--red); font-weight:700;
+    text-decoration:underline; text-underline-offset:4px}
 
   .mobile-bar{display:none}
-  @media (max-width:879px){
-    .confirm-card{display:none}
-    .mobile-bar{
-      display:flex; position:fixed; bottom:0; left:0; right:0; justify-content:center;
-      background:linear-gradient(to top, var(--bg) 72%, transparent);
-      padding:22px 18px 18px; pointer-events:none; z-index:5;
-    }
-    .mobile-bar .inner{width:100%; max-width:394px; pointer-events:auto}
-    .mobile-bar .picked{text-align:center; padding-bottom:8px; min-height:1.4em}
+  @media (max-width:919px){
+    .mobile-bar{display:flex; position:fixed; bottom:0; left:0; right:0; justify-content:center; z-index:40;
+      background:linear-gradient(to top, var(--bg) 72%, transparent); padding:20px 18px 16px; pointer-events:none}
+    .mobile-bar .inner{width:100%; max-width:400px; pointer-events:auto}
+    .desk-confirm{display:none}
   }
 
-  .done{display:none; text-align:center; padding:26px 0 6px}
-  .done .check{width:56px; height:56px; border-radius:50%; border:2px solid var(--ok); color:var(--ok); font-size:1.5rem; line-height:53px; margin:0 auto 14px}
-  .done h2{font-family:'Bricolage Grotesque',sans-serif; font-size:1.55rem; padding-bottom:6px}
-  .done p{color:var(--muted); font-size:.92rem; padding-bottom:20px}
-  .done p strong{color:var(--ink)}
-  .done .session{text-align:left; max-width:430px; margin:0 auto}
+  .done-banner{display:none; text-align:center; padding:10px 0 4px}
+  .done-banner .check{width:54px; height:54px; border-radius:50%; border:2px solid var(--ok); color:var(--ok);
+    font-size:1.4rem; line-height:51px; margin:0 auto 10px; animation:pop .45s}
+  .done-banner h2{font-family:'Archivo'; font-weight:900; font-size:1.4rem}
+  .done-banner p{color:var(--muted); font-size:.88rem; padding-top:5px}
 
-  footer{padding:30px 0 40px; text-align:center; color:var(--muted); font-size:.74rem; line-height:1.8}
-  footer a{color:var(--muted)}
-  .quote{text-align:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.82rem; letter-spacing:.1em; color:var(--gold); padding-top:4px}
+  /* ===== footer ===== */
+  footer{margin-top:50px; border-top:3px solid var(--red); background:var(--card)}
+  .f-in{display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:26px; padding:32px 0 24px}
+  @media (max-width:760px){ .f-in{grid-template-columns:1fr} }
+  .f-in h5{font-size:.66rem; letter-spacing:.26em; color:var(--red); font-weight:800; padding-bottom:11px}
+  .f-in p,.f-in a{color:var(--muted); font-size:.83rem; line-height:1.9; text-decoration:none; display:block}
+  .f-in a:hover{color:var(--red)}
+  .f-bot{border-top:1px solid var(--line); text-align:center; padding:14px; color:var(--muted); font-size:.74rem}
   @media (prefers-reduced-motion: no-preference){
-    .card{animation:rise .4s cubic-bezier(.2,.8,.3,1) both}
-    @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+    .card,.ticket{animation:rise .4s cubic-bezier(.2,.8,.3,1) both}
+    @keyframes rise{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
   }
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="topbar">
-    <span class="logo"><img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/64650d04a781d26e0f6f5c6a.png" alt="Kenny Leonore Productions"></span>
-    <div class="brand"><div class="l1">KENNY LEONORE</div><div class="l2">PRODUCTIONS</div></div>
-    <div class="seg" role="group" aria-label="Langue">
-      <button id="lang-fr" aria-pressed="true" onclick="setLang('fr')">FR</button>
-      <button id="lang-en" aria-pressed="false" onclick="setLang('en')">EN</button>
-    </div>
-    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Thème">🌙</button>
+<header class="topbar"><div class="wrap in">
+  <span class="logo"><img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/64650d04a781d26e0f6f5c6a.png" alt="Kenny Leonore Productions"></span>
+  <div class="brand"><div class="l1">KENNY LEONORE</div><div class="l2">PRODUCTIONS</div></div>
+  <div class="seg" role="group" aria-label="Langue">
+    <button id="lang-fr" aria-pressed="true" onclick="setLang('fr')">FR</button>
+    <button id="lang-en" aria-pressed="false" onclick="setLang('en')">EN</button>
   </div>
-</div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Thème">🌙</button>
+</div></header>
 
-<div class="hero">
-  <div class="mosaic" aria-hidden="true">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/6467e5db680f2647c441bd34.jpeg" alt="">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125bd0a889095c8cdb0a.jpeg" alt="">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647ae31ee283d58f515798e3.jpeg" alt="">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647addceea3c6c7122b0c7af.jpeg" alt="">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125b680f26669343977b.jpeg" alt="">
-    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647add7de283d5d19e5797ae.jpeg" alt="">
-  </div>
-  <div class="veil"></div>
-  <div class="title"><h1 data-i18n="hero">Reprogrammer la session</h1><p>KLP STUDIO · MAPOU</p></div>
+<div class="pagehead">
+  <div class="kicker">KLP STUDIO · RESCHEDULE</div>
+  <h1 data-i18n="h1">Choisissez une nouvelle date & heure</h1>
 </div>
 
 <main class="wrap">
-  <div class="grid" id="grid">
-    <div>
-      <section class="card" id="screen-pick">
-        <p class="lede" data-i18n="lede">Choisissez un nouveau créneau — la session ci-dessous sera déplacée.</p>
-        <div class="session">
-          <span class="tag" data-i18n="tag_move">SESSION À DÉPLACER</span>
-          <div class="student">Jaden Harel</div>
-          <div class="lesson-line">Drum · Rick Cupidon · Studio B</div>
-          <div class="when">
-            <div><div class="lbl" data-i18n="lbl_date">DATE</div><div class="val" data-i18n="cur_date">Ven 13 juin</div></div>
-            <div><div class="lbl" data-i18n="lbl_time">HEURE</div><div class="val">12:00 – 12:30</div></div>
-          </div>
-        </div>
-        <div id="days"></div>
-      </section>
-
-      <section class="card done" id="screen-done">
-        <div class="check">✓</div>
-        <h2 data-i18n="d_title">Session re-bookée</h2>
-        <p><span data-i18n="d_sub">La session de <strong>Jaden</strong> est déplacée. La confirmation arrive sur votre WhatsApp.</span> 🙏</p>
-        <div class="session ok">
-          <span class="tag" data-i18n="tag_new">NOUVEAU CRÉNEAU</span>
-          <div class="student">Jaden Harel</div>
-          <div class="lesson-line">Drum · Rick Cupidon · Studio B</div>
-          <div class="when">
-            <div><div class="lbl" data-i18n="lbl_date">DATE</div><div class="val" id="n-date">—</div></div>
-            <div><div class="lbl" data-i18n="lbl_time">HEURE</div><div class="val" id="n-time">—</div></div>
-          </div>
-        </div>
-        <a class="alt" href="https://wa.me/23059804605" data-i18n="alt">Aucun horaire ne convient ? Écrivez-nous</a>
-      </section>
+  <div class="grid">
+    <!-- ============ CALENDRIER (export du calendrier Odoo) ============ -->
+    <div class="card" id="cal-card">
+      <h2 data-i18n="cal_h">Disponibilités du professeur</h2>
+      <p class="sub" data-i18n="cal_p">Les jours marqués d'un point sont disponibles — comme sur notre calendrier studio.</p>
+      <div class="cal-head">
+        <button id="prev" aria-label="Mois précédent" onclick="moveMonth(-1)">‹</button>
+        <span class="mo" id="mo-label"></span>
+        <button id="nextb" aria-label="Mois suivant" onclick="moveMonth(1)">›</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="slots-h" id="slots-h"></div>
+      <div class="chips" id="slots"></div>
     </div>
 
-    <aside class="card confirm-card" id="confirm-card">
-      <h3 data-i18n="c_title">VOTRE CHOIX</h3>
-      <div class="picked" id="picked-desktop"></div>
-      <button class="confirm" id="confirm-desktop" disabled data-i18n="c_btn">CONFIRMER CE CRÉNEAU</button>
+    <!-- ============ TICKET ============ -->
+    <aside class="ticket-wrap">
+      <div class="done-banner" id="done-banner">
+        <div class="check">✓</div>
+        <h2 data-i18n="d_h">Session re-bookée</h2>
+        <p data-i18n="d_p">La confirmation arrive sur votre WhatsApp 🙏</p>
+      </div>
+      <div class="ticket" id="ticket">
+        <div class="top"><span class="klp">KLP STUDIO</span><span class="adm">ADMIT ONE</span></div>
+        <div class="body">
+          <div class="student">Jaden Harel</div>
+          <div class="line">Drum · Rick Cupidon · Studio B</div>
+          <div class="perfo"></div>
+        </div>
+        <div class="when">
+          <div class="k" data-i18n="t_when">SÉANCE</div>
+          <div class="old" data-i18n="t_old">Ven 13 juin 2026 · 12:00 – 12:30</div>
+          <div class="new placeholder" id="t-new" data-i18n="t_pick">sélectionnez une date et un créneau…</div>
+        </div>
+        <div class="barcode" aria-hidden="true"></div>
+        <div class="ref">N° KLP-RSV-2718 · MAPOU</div>
+      </div>
+      <button class="confirm desk-confirm" id="confirm-d" disabled onclick="doConfirm()" data-i18n="b_confirm">CONFIRMER CE CRÉNEAU</button>
       <a class="alt" href="https://wa.me/23059804605" data-i18n="alt">Aucun horaire ne convient ? Écrivez-nous</a>
     </aside>
   </div>
 </main>
 
-<div class="mobile-bar" id="mobile-bar">
-  <div class="inner">
-    <div class="picked" id="picked-mobile"></div>
-    <button class="confirm" id="confirm-mobile" disabled data-i18n="c_btn">CONFIRMER CE CRÉNEAU</button>
-  </div>
-</div>
+<div class="mobile-bar"><div class="inner">
+  <button class="confirm" id="confirm-m" disabled onclick="doConfirm()" data-i18n="b_confirm">CONFIRMER CE CRÉNEAU</button>
+</div></div>
 
-<p class="quote">« INSPIRED MIND BY MAKING MUSIC »</p>
-<footer class="wrap">
-  Kenny Leonore Productions Ltd · Unit 8 Building 8, Quartier Des Serres, Rue Labourdonnais, Mapou<br>
-  <a href="tel:+23059804605">+230 5980-4605</a> · <a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a> ·
-  <a href="https://www.kennyleonore.com">kennyleonore.com</a>
-</footer>
+<footer><div class="wrap">
+  <div class="f-in">
+    <div><h5>KENNY LEONORE PRODUCTIONS</h5>
+      <p data-i18n="f_about">Studio d'enregistrement professionnel & école de musique à Maurice. « Inspired mind by making music ».</p></div>
+    <div><h5 data-i18n="f_contact">CONTACT</h5>
+      <a href="tel:+23059804605">+230 5980-4605</a>
+      <a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a>
+      <p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p></div>
+    <div><h5 data-i18n="f_links">LIENS</h5>
+      <a href="https://www.kennyleonore.com">kennyleonore.com</a>
+      <a href="https://www.facebook.com/profile.php?id=100092551162954">Facebook</a>
+      <a href="https://www.youtube.com/channel/UCYDtsguWN3R6kykYemlImJQ">YouTube</a></div>
+  </div>
+  <div class="f-bot">© Kenny Leonore Productions Ltd</div>
+</div></footer>
 
 <script>
-const I18N = {
-  fr: {
-    hero:"Reprogrammer la session",
-    lede:"Choisissez un nouveau créneau — la session ci-dessous sera déplacée.",
-    tag_move:"SESSION À DÉPLACER", tag_new:"NOUVEAU CRÉNEAU",
-    lbl_date:"DATE", lbl_time:"HEURE", cur_date:"Ven 13 juin",
-    c_title:"VOTRE CHOIX", c_btn:"CONFIRMER CE CRÉNEAU",
-    none:"Sélectionnez un créneau dans la liste.",
-    pick:"Nouveau créneau :",
-    d_title:"Session re-bookée",
-    d_sub:"La session de Jaden est déplacée. La confirmation arrive sur votre WhatsApp.",
-    alt:"Aucun horaire ne convient ? Écrivez-nous",
-    days:[["Samedi 14 juin",["09:00","09:30","11:00","15:30"]],["Lundi 16 juin",["13:00","16:00","16:30"]],["Mardi 17 juin",["12:00","12:30","17:00"]]],
-  },
-  en: {
-    hero:"Reschedule the session",
-    lede:"Pick a new time slot — the session below will be moved.",
-    tag_move:"SESSION TO MOVE", tag_new:"NEW SLOT",
-    lbl_date:"DATE", lbl_time:"TIME", cur_date:"Fri, June 13",
-    c_title:"YOUR PICK", c_btn:"CONFIRM THIS SLOT",
-    none:"Select a slot from the list.",
-    pick:"New slot:",
-    d_title:"Session rebooked",
-    d_sub:"Jaden's session has been moved. The confirmation is on its way to your WhatsApp.",
-    alt:"No slot works for you? Message us",
-    days:[["Saturday, June 14",["09:00","09:30","11:00","15:30"]],["Monday, June 16",["13:00","16:00","16:30"]],["Tuesday, June 17",["12:00","12:30","17:00"]]],
-  }
+/* Disponibilités mock {YYYY-MM-DD:[heures]} — remplacées par l'API Odoo
+   (calendrier des sessions + dispo prof, durée 30 min). */
+const AVAILABILITY = {
+  "2026-06-14": ["09:00","09:30","11:00","15:30"],
+  "2026-06-16": ["13:00","16:00","16:30"],
+  "2026-06-17": ["12:00","12:30","17:00"],
+  "2026-06-20": ["09:00","10:00","14:30"],
+  "2026-06-23": ["15:00","15:30"],
+  "2026-06-27": ["09:30","11:30","16:00"],
+  "2026-07-01": ["13:00","13:30"],
+  "2026-07-04": ["09:00","10:30","15:00"],
 };
 const DURATION_MIN = 30;
+const TODAY = new Date(2026, 5, 12);
+
+const I18N = {
+  fr: {
+    h1:"Choisissez une nouvelle date & heure",
+    cal_h:"Disponibilités du professeur",
+    cal_p:"Les jours marqués d'un point sont disponibles — comme sur notre calendrier studio.",
+    slots_for:"CRÉNEAUX DU", no_slot:"Choisissez un jour disponible dans le calendrier.",
+    t_when:"SÉANCE", t_old:"Ven 13 juin 2026 · 12:00 – 12:30",
+    t_pick:"sélectionnez une date et un créneau…",
+    b_confirm:"CONFIRMER CE CRÉNEAU",
+    d_h:"Session re-bookée", d_p:"La confirmation arrive sur votre WhatsApp 🙏",
+    alt:"Aucun horaire ne convient ? Écrivez-nous",
+    f_about:"Studio d'enregistrement professionnel & école de musique à Maurice. « Inspired mind by making music ».",
+    f_contact:"CONTACT", f_links:"LIENS",
+    months:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
+    dows:["Lu","Ma","Me","Je","Ve","Sa","Di"],
+    daysFull:["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"],
+  },
+  en: {
+    h1:"Pick a new date & time",
+    cal_h:"Teacher availability",
+    cal_p:"Dotted days are available — straight from our studio calendar.",
+    slots_for:"SLOTS FOR", no_slot:"Pick an available day on the calendar.",
+    t_when:"SESSION", t_old:"Fri, June 13 2026 · 12:00 – 12:30",
+    t_pick:"select a date and a time slot…",
+    b_confirm:"CONFIRM THIS SLOT",
+    d_h:"Session rebooked", d_p:"The confirmation is on its way to your WhatsApp 🙏",
+    alt:"No slot works for you? Message us",
+    f_about:"Professional recording studio & music school in Mauritius. \u201CInspired mind by making music\u201D.",
+    f_contact:"CONTACT", f_links:"LINKS",
+    months:["January","February","March","April","May","June","July","August","September","October","November","December"],
+    dows:["Mo","Tu","We","Th","Fr","Sa","Su"],
+    daysFull:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+  }
+};
 let lang = "fr";
-let selected = null;
+let view = new Date(2026, 5, 1);
+let selDate = null, selTime = null;
 const t = k => I18N[lang][k];
 
 function toggleTheme(){
@@ -260,66 +318,85 @@ function setLang(l){
   lang = l; document.documentElement.lang = l;
   document.getElementById("lang-fr").setAttribute("aria-pressed", l==="fr");
   document.getElementById("lang-en").setAttribute("aria-pressed", l==="en");
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const k = el.dataset.i18n;
-    if (k === "d_sub"){ el.innerHTML = t(k).replace("Jaden", "<strong>Jaden</strong>"); }
-    else el.textContent = t(k);
-  });
-  selected = null;
-  renderDays(); refreshPick();
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+  renderCal(); renderSlots(); refreshTicket();
 }
+function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function endTime(x){
   const [h,m] = x.split(":").map(Number);
   const tot = h*60+m+DURATION_MIN;
   return String(Math.floor(tot/60)).padStart(2,"0")+":"+String(tot%60).padStart(2,"0");
 }
-function renderDays(){
-  const wrap = document.getElementById("days");
+function moveMonth(d){ view = new Date(view.getFullYear(), view.getMonth()+d, 1); renderCal(); }
+
+function renderCal(){
+  document.getElementById("mo-label").textContent =
+    t("months")[view.getMonth()].replace(/^./, c=>c.toUpperCase()) + " " + view.getFullYear();
+  const cal = document.getElementById("cal");
+  cal.innerHTML = t("dows").map(d => `<span class="dow">${d}</span>`).join("");
+  const first = new Date(view.getFullYear(), view.getMonth(), 1);
+  const lead = (first.getDay() + 6) % 7;            /* lundi en premier */
+  const nDays = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+  for (let i = 0; i < lead; i++) cal.appendChild(document.createElement("span"));
+  for (let d = 1; d <= nDays; d++){
+    const date = new Date(view.getFullYear(), view.getMonth(), d);
+    const key = iso(date);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "day"; b.textContent = d;
+    const av = AVAILABILITY[key] && date > TODAY;
+    if (av) b.classList.add("av");
+    if (key === iso(TODAY)) b.classList.add("today");
+    if (key === selDate) b.classList.add("sel");
+    if (av) b.onclick = () => { selDate = key; selTime = null; renderCal(); renderSlots(); refreshTicket(); };
+    else b.disabled = true;
+    cal.appendChild(b);
+  }
+  document.getElementById("prev").disabled = view.getFullYear() === TODAY.getFullYear() && view.getMonth() <= TODAY.getMonth();
+}
+function renderSlots(){
+  const head = document.getElementById("slots-h");
+  const wrap = document.getElementById("slots");
   wrap.innerHTML = "";
-  t("days").forEach(([day, times]) => {
-    const sec = document.createElement("section");
-    sec.className = "day";
-    sec.innerHTML = `<h2>${day}<span class="rule"></span></h2>`;
-    const chips = document.createElement("div");
-    chips.className = "chips";
-    times.forEach(x => {
-      const b = document.createElement("button");
-      b.className = "chip"; b.type = "button";
-      b.setAttribute("aria-pressed","false");
-      b.textContent = x;
-      b.onclick = () => {
-        wrap.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed","false"));
-        b.setAttribute("aria-pressed","true");
-        selected = { day, t: x };
-        refreshPick();
-      };
-      chips.appendChild(b);
-    });
-    sec.appendChild(chips);
-    wrap.appendChild(sec);
+  if (!selDate){ head.textContent = ""; wrap.innerHTML = `<span class="noslot">${t("no_slot")}</span>`; return; }
+  head.textContent = t("slots_for") + " " + fmtDate(selDate).toUpperCase();
+  AVAILABILITY[selDate].forEach(x => {
+    const b = document.createElement("button");
+    b.type="button"; b.className="chip"; b.textContent = x;
+    b.setAttribute("aria-pressed", selTime === x);
+    b.onclick = () => { selTime = x; renderSlots(); refreshTicket(); };
+    wrap.appendChild(b);
   });
 }
-function refreshPick(){
-  const html = selected
-    ? `${t("pick")} <strong>${selected.day} · ${selected.t} – ${endTime(selected.t)}</strong>`
-    : t("none");
-  ["picked-desktop","picked-mobile"].forEach(id => document.getElementById(id).innerHTML = html);
-  ["confirm-desktop","confirm-mobile"].forEach(id => document.getElementById(id).disabled = !selected);
+function fmtDate(key){
+  const [y,m,d] = key.split("-").map(Number);
+  const date = new Date(y, m-1, d);
+  const dow = t("daysFull")[date.getDay()];
+  return lang === "fr" ? `${dow} ${d} ${t("months")[m-1]}` : `${dow}, ${t("months")[m-1]} ${d}`;
+}
+function refreshTicket(){
+  const el = document.getElementById("t-new");
+  const ok = selDate && selTime;
+  if (ok){
+    el.classList.remove("placeholder");
+    el.textContent = fmtDate(selDate) + " · " + selTime + " – " + endTime(selTime);
+  } else {
+    el.classList.add("placeholder");
+    el.textContent = t("t_pick");
+  }
+  document.getElementById("confirm-d").disabled = !ok;
+  document.getElementById("confirm-m").disabled = !ok;
 }
 function doConfirm(){
-  if (!selected) return;
+  if (!selDate || !selTime) return;
   /* Intégration : POST /klp/reschedule/<token>/confirm {slot_start} */
-  document.getElementById("screen-pick").style.display = "none";
-  document.getElementById("confirm-card").style.display = "none";
-  document.getElementById("mobile-bar").style.display = "none";
-  document.getElementById("n-date").textContent = selected.day;
-  document.getElementById("n-time").textContent = selected.t + " – " + endTime(selected.t);
-  document.getElementById("screen-done").style.display = "block";
-  window.scrollTo({top:0});
+  document.getElementById("done-banner").style.display = "block";
+  document.getElementById("cal-card").style.opacity = ".45";
+  document.getElementById("cal-card").style.pointerEvents = "none";
+  document.getElementById("confirm-d").style.display = "none";
+  document.querySelector(".mobile-bar").style.display = "none";
+  window.scrollTo({top:0, behavior:"smooth"});
 }
-document.getElementById("confirm-desktop").onclick = doConfirm;
-document.getElementById("confirm-mobile").onclick = doConfirm;
-renderDays(); refreshPick();
+renderCal(); renderSlots(); refreshTicket();
 </script>
 </body>
 </html>
