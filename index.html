@@ -151,11 +151,23 @@
     .desk-confirm{display:none}
   }
 
+  /* ===== SUCCÈS ===== */
   .done-banner{display:none; text-align:center; padding:10px 0 4px}
   .done-banner .check{width:54px; height:54px; border-radius:50%; border:2px solid var(--ok); color:var(--ok);
     font-size:1.4rem; line-height:51px; margin:0 auto 10px; animation:pop .45s}
   .done-banner h2{font-family:'Archivo'; font-weight:900; font-size:1.4rem}
   .done-banner p{color:var(--muted); font-size:.88rem; padding-top:5px}
+
+  .done-card{display:none; text-align:center; padding:10px 0}
+  .done-card .ck{width:58px; height:58px; border-radius:50%; border:2px solid var(--ok); color:var(--ok);
+    font-size:1.5rem; line-height:55px; margin:0 auto 14px; animation:pop .45s}
+  .done-card h2{font-family:'Archivo'; font-weight:900; font-size:1.5rem; padding-bottom:4px}
+  .done-card .lead{color:var(--muted); font-size:.9rem; padding-bottom:18px}
+  .meet{max-width:480px; margin:0 auto; text-align:left}
+  .mrow{display:grid; grid-template-columns:90px 1fr; gap:12px; padding:11px 0; border-top:1px solid var(--line); font-size:.9rem}
+  .mrow .k{color:var(--muted); font-weight:700}
+  .mrow s{color:var(--muted)}
+  .mrow .nw{font-weight:800; color:var(--ok)}
 
   /* ===== footer ===== */
   footer{margin-top:50px; border-top:3px solid var(--red); background:var(--card)}
@@ -165,6 +177,7 @@
   .f-in p,.f-in a{color:var(--muted); font-size:.83rem; line-height:1.9; text-decoration:none; display:block}
   .f-in a:hover{color:var(--red)}
   .f-bot{border-top:1px solid var(--line); text-align:center; padding:14px; color:var(--muted); font-size:.74rem}
+
   @media (prefers-reduced-motion: no-preference){
     .card,.ticket{animation:rise .4s cubic-bezier(.2,.8,.3,1) both}
     @keyframes rise{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
@@ -190,8 +203,8 @@
 </div>
 
 <main class="wrap">
-  <div class="grid">
-    <!-- ============ CALENDRIER (export du calendrier Odoo) ============ -->
+  <div class="grid" id="main-grid">
+    <!-- ============ CALENDRIER ============ -->
     <div class="card" id="cal-card">
       <h2 data-i18n="cal_h">Disponibilités du professeur</h2>
       <p class="sub" data-i18n="cal_p">Les jours marqués d'un point sont disponibles — comme sur notre calendrier studio.</p>
@@ -205,7 +218,7 @@
       <div class="chips" id="slots"></div>
     </div>
 
-    <!-- ============ TICKET ============ -->
+    <!-- ============ TICKET CINÉMA ============ -->
     <aside class="ticket-wrap">
       <div class="done-banner" id="done-banner">
         <div class="check">✓</div>
@@ -231,6 +244,22 @@
       <a class="alt" href="https://wa.me/23059804605" data-i18n="alt">Aucun horaire ne convient ? Écrivez-nous</a>
     </aside>
   </div>
+
+  <!-- ============ SUCCÈS COMPLET ============ -->
+  <div class="card done-card" id="done-card">
+    <div class="ck">✓</div>
+    <h2 data-i18n="d_h">Session re-bookée</h2>
+    <p class="lead" data-i18n="d_p">La confirmation arrive sur votre WhatsApp 🙏</p>
+    <div class="meet">
+      <div class="mrow"><span class="k" data-i18n="m_w">Quoi</span><span>Drum — Jaden Harel</span></div>
+      <div class="mrow"><span class="k" data-i18n="m_t">Prof</span><span>Rick Cupidon · Studio B</span></div>
+      <div class="mrow">
+        <span class="k" data-i18n="m_q">Quand</span>
+        <span><s id="d-old">—</s><br><span class="nw" id="d-new">—</span></span>
+      </div>
+    </div>
+    <a class="alt" href="https://wa.me/23059804605" data-i18n="alt2">Une question ? Écrivez-nous sur WhatsApp</a>
+  </div>
 </main>
 
 <div class="mobile-bar"><div class="inner">
@@ -239,18 +268,24 @@
 
 <footer><div class="wrap">
   <div class="f-in">
-    <div><h5>KENNY LEONORE PRODUCTIONS</h5>
-      <p data-i18n="f_about">Studio d'enregistrement professionnel & école de musique à Maurice. « Inspired mind by making music ».</p></div>
-    <div><h5 data-i18n="f_contact">CONTACT</h5>
+    <div>
+      <h5>KENNY LEONORE PRODUCTIONS</h5>
+      <p data-i18n="f_about">Studio d'enregistrement professionnel & école de musique à Maurice. « Inspired mind by making music ».</p>
+    </div>
+    <div>
+      <h5 data-i18n="f_contact">CONTACT</h5>
+      <p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p>
       <a href="tel:+23059804605">+230 5980-4605</a>
       <a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a>
-      <p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p></div>
-    <div><h5 data-i18n="f_links">LIENS</h5>
+    </div>
+    <div>
+      <h5 data-i18n="f_links">LIENS</h5>
       <a href="https://www.kennyleonore.com">kennyleonore.com</a>
-      <a href="https://www.facebook.com/profile.php?id=100092551162954">Facebook</a>
-      <a href="https://www.youtube.com/channel/UCYDtsguWN3R6kykYemlImJQ">YouTube</a></div>
+      <a href="https://www.facebook.com/kennyleonorePRO/">Facebook</a>
+      <a href="https://www.youtube.com/@kennyleonore">YouTube</a>
+    </div>
   </div>
-  <div class="f-bot">© Kenny Leonore Productions Ltd</div>
+  <div class="f-bot">© 2026 Kenny Leonore Productions Ltd · KLP Studio · Mapou</div>
 </div></footer>
 
 <script>
@@ -269,6 +304,8 @@ const AVAILABILITY = {
 const DURATION_MIN = 30;
 const TODAY = new Date(2026, 5, 12);
 
+const OLD_SESSION = { label_fr: "Ven 13 juin 2026 · 12:00 – 12:30", label_en: "Fri, June 13 2026 · 12:00 – 12:30" };
+
 const I18N = {
   fr: {
     h1:"Choisissez une nouvelle date & heure",
@@ -280,6 +317,8 @@ const I18N = {
     b_confirm:"CONFIRMER CE CRÉNEAU",
     d_h:"Session re-bookée", d_p:"La confirmation arrive sur votre WhatsApp 🙏",
     alt:"Aucun horaire ne convient ? Écrivez-nous",
+    alt2:"Une question ? Écrivez-nous sur WhatsApp",
+    m_w:"Quoi", m_t:"Prof", m_q:"Quand",
     f_about:"Studio d'enregistrement professionnel & école de musique à Maurice. « Inspired mind by making music ».",
     f_contact:"CONTACT", f_links:"LIENS",
     months:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
@@ -296,6 +335,8 @@ const I18N = {
     b_confirm:"CONFIRM THIS SLOT",
     d_h:"Session rebooked", d_p:"The confirmation is on its way to your WhatsApp 🙏",
     alt:"No slot works for you? Message us",
+    alt2:"Any question? Message us on WhatsApp",
+    m_w:"What", m_t:"Teacher", m_q:"When",
     f_about:"Professional recording studio & music school in Mauritius. \u201CInspired mind by making music\u201D.",
     f_contact:"CONTACT", f_links:"LINKS",
     months:["January","February","March","April","May","June","July","August","September","October","November","December"],
@@ -335,7 +376,7 @@ function renderCal(){
   const cal = document.getElementById("cal");
   cal.innerHTML = t("dows").map(d => `<span class="dow">${d}</span>`).join("");
   const first = new Date(view.getFullYear(), view.getMonth(), 1);
-  const lead = (first.getDay() + 6) % 7;            /* lundi en premier */
+  const lead = (first.getDay() + 6) % 7;
   const nDays = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
   for (let i = 0; i < lead; i++) cal.appendChild(document.createElement("span"));
   for (let d = 1; d <= nDays; d++){
@@ -388,12 +429,22 @@ function refreshTicket(){
 }
 function doConfirm(){
   if (!selDate || !selTime) return;
-  /* Intégration : POST /klp/reschedule/<token>/confirm {slot_start} */
+  /* Intégration : POST /klp/reschedule/<token>/confirm {slot_start: selDate+'T'+selTime} */
+  const newLabel = fmtDate(selDate) + " · " + selTime + " – " + endTime(selTime);
+  const oldLabel = lang === "fr" ? OLD_SESSION.label_fr : OLD_SESSION.label_en;
+
+  /* Ticket : marque succès inline */
   document.getElementById("done-banner").style.display = "block";
   document.getElementById("cal-card").style.opacity = ".45";
   document.getElementById("cal-card").style.pointerEvents = "none";
   document.getElementById("confirm-d").style.display = "none";
   document.querySelector(".mobile-bar").style.display = "none";
+
+  /* Carte succès complète sous la grille */
+  document.getElementById("d-old").textContent = oldLabel;
+  document.getElementById("d-new").textContent = newLabel;
+  document.getElementById("done-card").style.display = "block";
+
   window.scrollTo({top:0, behavior:"smooth"});
 }
 renderCal(); renderSlots(); refreshTicket();
