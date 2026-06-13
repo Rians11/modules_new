@@ -2,503 +2,716 @@
 <html lang="en" data-theme="light">
 <head>
 <!--
-  KLP STUDIO — RESCHEDULE BY CALENDAR  (Odoo 18 public page, demo shell)
-  Logo identity: K red / L black / P gold, white pastille.
+  KENNY LEONORE PRODUCTIONS - KLP STUDIO
+  MODULE klp_studio : ONLINE ENROLLMENT (Pricing / Enrollment / Teachers)
+  Brand: round KLP Studio logo (K red / L ink / P gold, white pastille).
+  English only. Light/Dark themes.
+  Real data: published price list (VAT exclusive, 15%), Odoo subscription form
+  (service category, lesson types, modes In-Home/Online/In-Studio,
+  durations 30/45/1h/1h30, recurrence Weekly/Bi-weekly/Monthly/One-Time,
+  payment Juice/Cash), final Odoo-portal-style quotation preview.
 
-  CROSS-AVAILABILITY ENGINE (the core):
-  A slot is offered only if it satisfies ALL constraints:
-    . school opening hours (+ closed weekdays)   09:00–19:00, Sunday closed
-    . role PARENT  : teacher's calendar free  ∩  compatible ROOM free
-    . role TEACHER : student's calendar free   ∩  compatible ROOM free
-    . declared teacher availability window (when present)
+  ODOO INTEGRATION
+    GET  /klp/inscription            (http, auth public, website)
+    POST /klp/inscription/submit     (JSON) -> sale.order DRAFT (Quotation)
+      Music Lesson  -> 1 sale.order PER child (x_studio_student m2o)
+      Other         -> 1 sale.order with product lines (qty)
+    Fields: x_studio_student, x_studio_lesson_type_2, x_studio_lesson_mode_1,
+            x_studio_lesson_duration, x_studio_recurrence, x_studio_payment_method,
+            x_studio_lesson_day_1, x_studio_service_type_2, x_studio_lesson_time_1.
+    Anti-spam: honeypot field "website" + server-side rate-limit + strict validation.
 
-  ODOO INTEGRATION:
-  - GET /klp/reschedule/<token>
-      token -> klp.parent.lesson.confirmation (parent) OR
-               klp.teacher.daily.confirmation (teacher)  => ROLE is server-known.
-      No parent/teacher switch in the UI: the role is fixed by the token.
-  - JSON /slots   : days + slots for the visible month, window J+1 .. J+35
-  - JSON /confirm : atomic write start/stop on the existing calendar.event,
-                    chatter message_post, anti-collision re-check, WhatsApp notify.
-  This single file is a self-contained visual/UX demo of that page.
+  NOTE (Odoo): split inline <style>/<script> into static assets
+  (web.assets_frontend) for strict QWeb. Logo: /klp_studio/static/src/img/klp_logo.png
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KLP Studio — Reschedule your session</title>
+<title>KLP Studio - Online Enrollment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --red:#C8102E; --red-deep:#9C0A23; --red-soft:#FCEDEF; --red-lip:#7E0819;
-  --gold:#C9A227; --gold-deep:#A8861B; --gold-soft:#FBF4DE;
-  --ink:#17161A; --muted:#6B6770; --bg:#EFEDEF; --card:#FFFFFF;
-  --line:#E4E0E5; --field:#F4F2F5; --ok:#1F7A4D;
-  --r:16px;
-  --press:cubic-bezier(.34,1.56,.64,1);
-  /* layered "raised plate" depth */
-  --d-amb:0 1px 2px rgba(23,22,26,.05);
-  --d-key:0 18px 40px -18px rgba(23,22,26,.30);
-  --d-card:var(--d-amb), 0 4px 10px -4px rgba(23,22,26,.10), 0 22px 48px -24px rgba(23,22,26,.34);
-  --hi:inset 0 1px 0 rgba(255,255,255,.9);          /* top glossy edge */
-  --surf:linear-gradient(180deg,#FFFFFF 0%,#FAF9FA 100%);
+  --red:#C8102E; --red-deep:#9C0A23; --red-soft:#FCEDEF;
+  --gold:#C9A227; --gold-deep:#A9851A; --gold-soft:#FBF4DD;
+  --ink:#17161A; --muted:#6B6770; --bg:#F7F6F7; --card:#FFFFFF;
+  --line:#E7E4E7; --field:#FBFAFB; --ok:#1F7A4D; --err:#B4452F;
+  --shadow:0 12px 30px rgba(23,22,26,.08); --r:14px;
 }
 [data-theme="dark"]{
-  --red:#E5304B; --red-deep:#C8102E; --red-soft:#2A171B; --red-lip:#7C0F1F;
-  --gold:#D9B544; --gold-deep:#C9A227; --gold-soft:#262012;
-  --ink:#F3F1F3; --muted:#9D97A1; --bg:#0B0A0D; --card:#171519;
-  --line:#2C2830; --field:#100E13; --ok:#5BC08C;
-  --d-amb:0 1px 2px rgba(0,0,0,.5);
-  --d-key:0 18px 44px -18px rgba(0,0,0,.7);
-  --d-card:var(--d-amb), 0 6px 14px -6px rgba(0,0,0,.55), 0 26px 54px -26px rgba(0,0,0,.7);
-  --hi:inset 0 1px 0 rgba(255,255,255,.06);
-  --surf:linear-gradient(180deg,#1B1920 0%,#151318 100%);
+  --red:#E5304B; --red-deep:#C8102E; --red-soft:#2A171B;
+  --gold:#D9B84A; --gold-deep:#C9A227; --gold-soft:#241F12;
+  --ink:#F3F1F3; --muted:#9D97A1; --bg:#121014; --card:#1B181D;
+  --line:#2B272E; --field:#141216; --ok:#5BC08C; --err:#E07856;
+  --shadow:0 12px 30px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{overflow-x:clip;max-width:100%}
-body{font-family:'Instrument Sans',system-ui,sans-serif;background:
-  radial-gradient(1100px 540px at 50% -180px,color-mix(in srgb,var(--red) 9%,transparent),transparent 70%),
-  var(--bg);color:var(--ink);transition:background .3s,color .3s;min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-main{flex:1 0 auto}
-footer{margin-top:auto}
-img,svg{max-width:100%}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);transition:background .25s,color .25s;overflow-x:clip;line-height:1.55}
 button{font:inherit;cursor:pointer}
-a{color:inherit}
-:focus-visible{outline:3px solid color-mix(in srgb,var(--red) 60%,transparent);outline-offset:2px;border-radius:8px}
-.wrap{max-width:1240px;margin:0 auto;padding:0 18px}
-.tri{height:4px;background:linear-gradient(90deg,var(--red) 0 34%,var(--ink) 34% 67%,var(--gold) 67% 100%);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px;width:100%}
+img{max-width:100%;display:block}
+svg{display:block}
+
+/* ===== ROUND LOGO (inline SVG = new KLP Studio mark) ===== */
+.klp-logo{flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.18))}
+.klp-logo .disc{fill:#FFFFFF}
+.klp-logo .ring{stroke:rgba(23,22,26,.06);stroke-width:1.5;fill:none}
 
 /* ===== HEADER ===== */
-.top{background:color-mix(in srgb,var(--card) 86%,transparent);backdrop-filter:saturate(140%) blur(12px);position:sticky;top:0;z-index:50;box-shadow:0 1px 0 var(--line),0 8px 24px -18px rgba(0,0,0,.5)}
-.toprow{display:flex;align-items:center;gap:12px;padding:11px 0;min-width:0}
-.badge{display:inline-block;width:54px;height:54px;flex:none;border-radius:50%;
-  background:var(--card) url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAAEECAYAAADOCEoKAADQQElEQVR42uz9ebhlSVUmjL8rYu8z3CHnoTJrnqgha6QKipksBGQUPqFKaRG1VRDFWR9bbc1MVJywG/tTG/qDVvyhtJmi4AwOlYBAoVVQBTVmFmQNWZU15Hung/aOiPX7I2LvGzfuin2TFhCwkicfsu4099brrjjjuxubsfZf9XOIySfAQQ== ") center/86% no-repeat;
-  background-blend-mode:normal;
-  box-shadow:var(--d-amb),0 6px 16px -6px rgba(23,22,26,.4),inset 0 0 0 1.5px color-mix(in srgb,var(--gold) 40%,transparent),inset 0 2px 4px rgba(255,255,255,.7)}
-[data-theme="dark"] .badge{box-shadow:var(--d-amb),0 8px 18px -6px rgba(0,0,0,.6),inset 0 0 0 1.5px color-mix(in srgb,var(--gold) 55%,transparent),inset 0 2px 5px rgba(255,255,255,.08)}
-.badge.sm{width:46px;height:46px}
-.brand{line-height:1.05;margin-right:auto;white-space:nowrap;min-width:0;overflow:hidden}
-.brand .l1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(1rem,3vw,1.2rem);letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis}
-.brand .l1 .k{color:var(--red)}.brand .l1 .l{color:var(--ink)}.brand .l1 .p{color:var(--gold)}
-.brand .l2{font-size:clamp(.47rem,1.6vw,.59rem);font-weight:700;letter-spacing:.26em;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
-@media(max-width:360px){.brand .l2{display:none}}
-/* tactile theme toggle */
-.tbtn{flex:none;width:46px;height:40px;border-radius:12px;border:1px solid var(--line);
-  background:var(--surf);color:var(--ink);font-size:1.05rem;line-height:1;
-  box-shadow:var(--hi),0 4px 0 color-mix(in srgb,var(--line) 70%,#000 8%),var(--d-amb);
-  transition:transform .12s var(--press),box-shadow .12s}
-.tbtn:hover{transform:translateY(-1px)}
-.tbtn:active{transform:translateY(3px);box-shadow:var(--hi),0 1px 0 color-mix(in srgb,var(--line) 70%,#000 8%)}
+.top{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.toprow{display:flex;align-items:center;gap:12px;padding:10px 0}
+.brand{line-height:1.05;margin-right:auto;white-space:nowrap}
+.brand .l1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(.9rem,2.8vw,1.1rem);letter-spacing:.02em}
+.brand .l2{font-size:clamp(.5rem,1.8vw,.62rem);font-weight:700;letter-spacing:.36em;color:var(--red)}
+.tbtn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;width:38px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s}
+.tbtn:hover{border-color:var(--red);background:var(--red-soft)}
+.tbtn svg{width:18px;height:18px}
+.ico-moon{display:block}.ico-sun{display:none}
+[data-theme="dark"] .ico-moon{display:none}[data-theme="dark"] .ico-sun{display:block}
+.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px}
+.nav::-webkit-scrollbar{display:none}
+.nav button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:.9rem;padding:9px 18px;border-radius:99px;white-space:nowrap;transition:color .18s,background .18s,box-shadow .18s}
+.nav button.on{background:var(--red);color:#fff;box-shadow:0 6px 16px rgba(200,16,46,.3)}
+.nav button:not(.on):hover{color:var(--ink);background:var(--red-soft)}
+.nav button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
-/* ===== HERO PLATE ===== */
-.band{position:relative;color:#fff;text-align:center;padding:30px 18px 34px;overflow:hidden;
-  background:linear-gradient(135deg,var(--red-deep) 0%,var(--red) 55%,#DA452F 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -22px 40px -22px rgba(0,0,0,.45),0 22px 44px -28px rgba(200,16,46,.7)}
-.band .orb{position:absolute;border-radius:50%;pointer-events:none}
-.band .o1{width:230px;height:230px;right:-60px;top:-90px;background:radial-gradient(circle at 32% 32%,rgba(255,255,255,.32),rgba(255,255,255,0) 62%)}
-.band .o2{width:170px;height:170px;left:-50px;bottom:-80px;background:radial-gradient(circle at 60% 40%,rgba(201,162,39,.5),rgba(201,162,39,0) 60%)}
-.band .o3{width:90px;height:90px;left:24%;top:14%;background:radial-gradient(circle at 40% 40%,rgba(255,255,255,.18),rgba(255,255,255,0) 65%)}
-.band h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(1.3rem,4.2vw,2rem);position:relative;text-shadow:0 2px 0 rgba(0,0,0,.18),0 10px 24px rgba(0,0,0,.28)}
-.band p{font-size:.68rem;letter-spacing:.34em;font-weight:700;opacity:.95;padding-top:6px;position:relative}
+/* ===== HERO (original-colour photos + dark legibility gradient only) ===== */
+.hero{position:relative;overflow:hidden;background:var(--ink)}
+.hero .mosaic{display:grid;grid-template-columns:repeat(6,1fr);height:180px}
+@media(min-width:760px){.hero .mosaic{height:240px}}
+.hero .mosaic img{width:100%;height:100%;object-fit:cover;transition:transform .7s ease}
+.hero:hover .mosaic img{transform:scale(1.06)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,7,10,.30) 0%,rgba(8,7,10,.45) 45%,rgba(8,7,10,.78) 100%);z-index:1}
+.hero .in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;padding:0 16px}
+.hero h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(1.6rem,5.5vw,2.6rem);text-shadow:0 2px 18px rgba(0,0,0,.55);letter-spacing:.01em}
+.hero h1 .acc{color:var(--gold)}
+.hero p{font-size:clamp(.66rem,2vw,.8rem);letter-spacing:.34em;font-weight:700;opacity:.95;padding-top:10px;text-shadow:0 1px 10px rgba(0,0,0,.6)}
 
-/* ===== BODY ===== */
-main{padding:24px 0 138px;perspective:1400px}
-@media(min-width:880px){main{padding-bottom:60px}}
-.grid{display:grid;grid-template-columns:1fr;gap:18px}
-@media(min-width:880px){.grid{grid-template-columns:1.7fr 1fr;align-items:start}}
-.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
-  box-shadow:var(--hi),var(--d-card);padding:20px;transition:transform .35s var(--press),box-shadow .35s}
-.left-tilt{transform-style:preserve-3d}
+/* ===== SECTIONS ===== */
+main{padding:26px 0 56px}
+.sec{display:none}
+.sec.on{display:block;animation:pop .42s cubic-bezier(.2,.8,.3,1)}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.sec.on{animation:none}.hero .mosaic img{transition:none}.hero:hover .mosaic img{transform:none}}
+h2.title{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(1.4rem,4vw,1.7rem);padding-bottom:4px}
+.sub{color:var(--muted);font-size:.92rem;padding-bottom:22px;max-width:62ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px}
 
-.session{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:16px;
-  background:linear-gradient(180deg,var(--field),color-mix(in srgb,var(--field) 70%,var(--card)));
-  box-shadow:var(--hi),inset 4px 0 0 var(--red),inset -4px 0 0 var(--gold),0 8px 20px -14px rgba(0,0,0,.4)}
-.session .tag{display:inline-block;font-size:.59rem;font-weight:800;letter-spacing:.2em;color:var(--red);
-  border:1px solid color-mix(in srgb,var(--red) 55%,transparent);border-radius:99px;padding:4px 10px;margin-bottom:10px;
-  background:color-mix(in srgb,var(--red) 8%,transparent)}
-.session .stu{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.28rem}
-.session .ln{color:var(--muted);font-size:.88rem;margin-top:3px}
-.session .wh{font-weight:700;font-size:.92rem;margin-top:10px;font-variant-numeric:tabular-nums}
-.session .wh s{color:var(--red)}
+/* ----- pricing ----- */
+.pgrid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:760px){.pgrid{grid-template-columns:1fr 1fr}}
+.pcard{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.pcard::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--red),var(--gold));transform:scaleX(.25);transform-origin:left;transition:transform .3s}
+.pcard:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(200,16,46,.16)}
+.pcard:hover::before{transform:scaleX(1)}
+.pcard h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.12rem;padding-bottom:12px;display:flex;align-items:center;gap:8px}
+.pcard h3 .dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex:none}
+.pline{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px dashed var(--line);font-size:.92rem}
+.pline .n{font-weight:600}
+.pline .d{color:var(--muted);font-size:.78rem;padding-top:2px;line-height:1.4}
+.pline .p{font-weight:800;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pline .p .per{color:var(--muted);font-weight:600;font-size:.74rem}
+.pcta{margin-top:16px;width:100%;border:1.5px solid var(--red);background:transparent;color:var(--red);font-weight:800;border-radius:10px;padding:12px;position:relative;overflow:hidden;transition:color .2s,background .2s}
+.pcta::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-110%);transition:transform .6s}
+.pcta:hover{background:var(--red);color:#fff}
+.pcta:hover::after{transform:translateX(110%)}
+.pcta:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.vat{color:var(--muted);font-size:.8rem;font-style:italic;text-align:center;padding-top:20px}
 
-.rolenote{font-size:.82rem;color:var(--muted);line-height:1.6;padding:2px 0 18px;display:flex;gap:9px}
-.rolenote svg{flex:none;width:17px;height:17px;margin-top:2px;fill:var(--red)}
+/* ----- teachers ----- */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.tcard{text-align:center;padding:22px 12px;transition:transform .2s,box-shadow .2s}
+.tcard:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(200,16,46,.15)}
+.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-deep));color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:transform .25s;box-shadow:0 8px 18px rgba(200,16,46,.28)}
+.tcard:hover .avatar{transform:scale(1.08) rotate(-4deg)}
+.tname{font-weight:800;font-size:.94rem}
+.ttag{display:inline-block;margin-top:8px;font-size:.7rem;font-weight:700;color:var(--red);background:var(--red-soft);border-radius:99px;padding:4px 10px}
 
-/* calendar */
-.cal-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px}
-.cal-head b{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.08rem}
-.navb{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surf);color:var(--ink);font-weight:800;font-size:1.05rem;
-  box-shadow:var(--hi),0 4px 0 color-mix(in srgb,var(--line) 65%,#000 10%),var(--d-amb);transition:transform .12s var(--press),box-shadow .12s,color .15s}
-.navb:hover:not(:disabled){color:var(--gold-deep);transform:translateY(-1px)}
-.navb:active:not(:disabled){transform:translateY(3px);box-shadow:var(--hi),0 1px 0 color-mix(in srgb,var(--line) 65%,#000 10%)}
-.navb:disabled{opacity:.32;cursor:not-allowed;box-shadow:none}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal .dow{text-align:center;font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--muted);padding:4px 0 8px}
-.day{aspect-ratio:1;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--muted);
-  font-weight:600;font-size:.92rem;position:relative;display:flex;align-items:center;justify-content:center;
-  font-variant-numeric:tabular-nums;opacity:.5}
-.day.av{cursor:pointer;opacity:1;color:var(--ink);border-color:var(--line);background:var(--surf);
-  box-shadow:var(--hi),0 4px 0 color-mix(in srgb,var(--line) 70%,#000 9%),var(--d-amb);
-  transition:transform .14s var(--press),box-shadow .14s,border-color .14s}
-.day.av:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--red) 55%,transparent);
-  box-shadow:var(--hi),0 7px 0 color-mix(in srgb,var(--line) 70%,#000 9%),0 12px 20px -8px rgba(200,16,46,.4)}
-.day.av:active{transform:translateY(2px);box-shadow:var(--hi),0 1px 0 color-mix(in srgb,var(--line) 70%,#000 9%)}
-.day.av::after{content:"";position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;
-  background:var(--red);box-shadow:0 0 0 2px color-mix(in srgb,var(--red) 22%,transparent)}
-.day.sel{color:#fff;border-color:var(--red-deep);
-  background:linear-gradient(180deg,#E0263E,var(--red) 45%,var(--red-deep));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 5px 0 var(--red-lip),0 14px 24px -8px rgba(200,16,46,.6);
-  transform:translateY(-1px)}
-.day.sel:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 7px 0 var(--red-lip),0 16px 26px -8px rgba(200,16,46,.6)}
-.day.sel::after{background:var(--gold);box-shadow:0 0 0 2px rgba(255,255,255,.25)}
-.day.old{opacity:1;color:var(--red);font-weight:800;text-decoration:line-through;text-decoration-thickness:2px}
-.legend{display:flex;flex-wrap:wrap;gap:16px;padding-top:14px;font-size:.74rem;color:var(--muted)}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:6px;vertical-align:middle;box-shadow:0 0 0 2px color-mix(in srgb,var(--red) 22%,transparent)}
-.legend s{color:var(--red);font-weight:700}
+/* ----- wizard stepper ----- */
+.steps{display:flex;gap:6px;padding-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step{flex:1;min-width:108px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.76rem;font-weight:700;white-space:nowrap;transition:border-color .2s,color .2s}
+.step .n{width:21px;height:21px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.68rem;flex:none}
+.step.act{border-color:var(--red);color:var(--ink)}
+.step.act .n{background:var(--red);border-color:var(--red);color:#fff}
+.step.ok .n{background:var(--ok);border-color:var(--ok);color:#fff}
 
-/* right panel */
-.side h3{font-size:.67rem;font-weight:800;letter-spacing:.22em;color:var(--red);padding-bottom:11px}
-.dt{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.05rem;padding-bottom:11px}
-.checks{display:flex;flex-wrap:wrap;gap:7px;padding-bottom:14px}
-.checks span{font-size:.69rem;font-weight:800;border-radius:99px;padding:5px 11px;
-  background:linear-gradient(180deg,var(--gold-soft),color-mix(in srgb,var(--gold-soft) 60%,var(--card)));
-  color:var(--gold-deep);border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);
-  box-shadow:var(--hi),0 2px 5px -2px rgba(168,134,27,.4)}
-[data-theme="dark"] .checks span{color:var(--gold)}
-.slots{display:flex;flex-direction:column;gap:9px;max-height:300px;overflow-y:auto;padding:2px 2px 2px 0}
-.slot{border:1px solid var(--line);border-radius:12px;background:var(--surf);color:var(--ink);font-weight:700;font-size:.94rem;
-  padding:13px;text-align:center;font-variant-numeric:tabular-nums;
-  box-shadow:var(--hi),0 4px 0 color-mix(in srgb,var(--line) 70%,#000 9%),var(--d-amb);
-  transition:transform .14s var(--press),box-shadow .14s,border-color .14s}
-.slot:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--red) 50%,transparent);
-  box-shadow:var(--hi),0 6px 0 color-mix(in srgb,var(--line) 70%,#000 9%),0 12px 18px -8px rgba(200,16,46,.32)}
-.slot:active{transform:translateY(2px);box-shadow:var(--hi),0 1px 0 color-mix(in srgb,var(--line) 70%,#000 9%)}
-.slot[aria-pressed="true"]{color:#fff;border-color:var(--red-deep);
-  background:linear-gradient(180deg,#E0263E,var(--red) 45%,var(--red-deep));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 0 var(--red-lip),0 12px 22px -8px rgba(200,16,46,.55);transform:translateY(-1px)}
-.empty{color:var(--muted);font-size:.86rem;text-align:center;padding:26px 8px;line-height:1.65}
-.confirm{width:100%;border:0;border-radius:14px;padding:16px;font-weight:800;font-size:.98rem;letter-spacing:.02em;color:#fff;
-  background:linear-gradient(180deg,#E0263E,var(--red) 48%,var(--red-deep));position:relative;overflow:hidden;margin-top:16px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 0 var(--red-lip),0 18px 30px -10px rgba(200,16,46,.55);
-  transition:transform .13s var(--press),box-shadow .13s,filter .2s}
-.confirm::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-120%);transition:transform .7s}
-.confirm:hover:not(:disabled){transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 0 var(--red-lip),0 22px 34px -10px rgba(200,16,46,.6)}
-.confirm:hover:not(:disabled)::after{transform:translateX(120%)}
-.confirm:active:not(:disabled){transform:translateY(5px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 0 var(--red-lip)}
-.confirm:disabled{cursor:not-allowed;filter:grayscale(.5) brightness(.96);opacity:.55;
-  background:linear-gradient(180deg,#9aa0a6,#7e848a);box-shadow:0 4px 0 rgba(0,0,0,.18)}
-.alt{display:block;text-align:center;margin-top:14px;font-size:.85rem;color:var(--red);font-weight:700;text-decoration:underline;text-underline-offset:4px}
-.sideCard{position:sticky;top:84px}
+/* ----- form ----- */
+label{display:block;font-size:.8rem;font-weight:700;padding:12px 0 6px}
+input,select{width:100%;font:inherit;font-size:1rem;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);transition:border-color .15s}
+input:focus-visible,select:focus-visible{outline:2px solid var(--red);outline-offset:1px;border-color:var(--red)}
+input.bad{border-color:var(--err)}
+.err{font-size:.78rem;color:var(--err);padding-top:5px;display:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+.hp{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-weight:600;font-size:.86rem;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);transition:background .15s,border-color .15s,color .15s;min-height:44px}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff;font-weight:700;box-shadow:0 5px 14px rgba(200,16,46,.3)}
+.chip:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.hint{display:none;margin-top:10px;font-size:.8rem;color:var(--gold-deep);font-weight:600;background:var(--gold-soft);border:1px dashed var(--gold);border-radius:9px;padding:9px 12px}
+.scard{border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:14px;background:var(--field)}
+.scard .head{display:flex;justify-content:space-between;align-items:center}
+.scard .who{font-size:.66rem;font-weight:800;letter-spacing:.18em;color:var(--red)}
+.rm{border:0;background:transparent;color:var(--muted);font-size:.76rem;font-weight:700;text-decoration:underline}
+.rm:hover{color:var(--err)}
+.add{width:100%;border:1.5px dashed var(--red);background:transparent;color:var(--red);border-radius:11px;padding:13px;font-weight:800;margin-top:2px;transition:background .2s;min-height:44px}
+.add:hover{background:var(--red-soft)}
+.switch{display:flex;align-items:center;gap:10px;padding-top:14px}
+.switch input{width:auto;accent-color:var(--red);transform:scale(1.25)}
+.switch span{font-size:.86rem;font-weight:600}
+.navrow{display:flex;gap:10px;padding-top:20px}
+.btn{flex:1;border:0;border-radius:11px;padding:14px;font-weight:800;font-size:.95rem;position:relative;overflow:hidden;min-height:48px}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 10px 24px rgba(200,16,46,.32);transition:background .2s}
+.btn.red::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);transform:translateX(-110%);transition:transform .6s}
+.btn.red:hover::after{transform:translateX(110%)}
+.btn.red:active{background:var(--red-deep)}
+.btn.red[disabled]{opacity:.65;cursor:progress;box-shadow:none}
+.btn.red[disabled]::after{display:none}
+.btn.gh{background:transparent;border:1px solid var(--line);color:var(--muted);flex:.5}
+.btn.gh:hover{border-color:var(--red);color:var(--red)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.qty{display:flex;align-items:center;gap:9px}
+.qty button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:800;font-size:1.1rem;line-height:1}
+.qty button:hover{border-color:var(--red);color:var(--red)}
+.qty .q{min-width:18px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.svc{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px dashed var(--line);padding:13px 0;font-size:.9rem}
+.svc .p{color:var(--red);font-weight:800;white-space:nowrap}
+.svc .p .per{color:var(--muted);font-weight:600;font-size:.72rem}
 
-/* mobile sticky confirm bar */
-.mbar{display:none}
-@media(max-width:879px){
-  .sideCard{position:static}
-  .mbar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:45;
-    background:linear-gradient(to top,var(--bg) 70%,transparent);padding:22px 16px 16px}
-  .mbar .in{max-width:420px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;
-    box-shadow:var(--hi),0 -6px 26px -12px rgba(0,0,0,.45)}
-  .mbar .pk{text-align:center;font-size:.85rem;color:var(--muted);padding:2px 0 9px;min-height:1.3em}
-  .mbar .pk b{color:var(--red)}
-  .mbar .confirm{margin-top:0}
-}
+/* ----- odoo-style preview ----- */
+.prev{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.prev .ph{background:var(--red);color:#fff;padding:14px 16px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;display:flex;align-items:center;gap:9px}
+.prev .ph svg{width:18px;height:18px}
+.prev .pb{padding:16px;background:var(--card)}
+.who-line{font-size:.86rem;padding-bottom:12px;color:var(--muted)}
+.who-line b{color:var(--ink)}
+.tbl{width:100%;border-collapse:collapse;font-size:.86rem}
+.tbl th{text-align:left;color:var(--muted);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl .meta{color:var(--muted);font-size:.78rem;line-height:1.45}
+.tbl .conf{color:var(--gold-deep);font-weight:700;font-style:italic}
+.tot{display:flex;justify-content:flex-end;gap:24px;padding-top:12px;font-size:.92rem}
+.tot .lab{color:var(--muted)}
+.tot .v{font-weight:800;min-width:100px;text-align:right;font-variant-numeric:tabular-nums}
+.tot.big{border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.tot.big .v{color:var(--red);font-size:1.1rem}
+.pv-note{color:var(--muted);font-size:.78rem;padding-top:14px;line-height:1.5}
 
-/* success */
-.done{display:none;text-align:center;padding:14px 0}
-.done .ck{width:66px;height:66px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:1.7rem;background:linear-gradient(180deg,#27935e,var(--ok));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 0 #145a37,0 18px 30px -10px rgba(31,122,77,.6);
-  animation:pop .5s var(--press)}
-@keyframes pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
-.done h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.55rem;padding-bottom:5px}
-.done .lead{color:var(--muted);font-size:.92rem;padding-bottom:20px}
-.meet{max-width:500px;margin:0 auto;text-align:left}
-.mrow{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:12px 2px;border-top:1px solid var(--line);font-size:.92rem}
-.mrow .k{color:var(--muted);font-weight:700}
-.mrow s{color:var(--muted)}
-.mrow .new{font-weight:800;color:var(--ok)}
+/* ----- success ----- */
+.done{display:none;text-align:center;padding:28px 0 8px}
+.done .ck{width:60px;height:60px;border-radius:50%;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 10px 26px rgba(31,122,77,.35)}
+.done .ck svg{width:30px;height:30px}
+.done h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.55rem;padding-bottom:8px}
+.done p{color:var(--muted);font-size:.92rem;padding-bottom:18px;max-width:46ch;margin:0 auto}
+.ref{display:inline-block;background:var(--field);border:1px dashed var(--line);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.86rem;margin-bottom:18px}
+.ref b{color:var(--red);font-variant-numeric:tabular-nums}
 
 /* ===== FOOTER ===== */
-footer{background:var(--card);box-shadow:0 -1px 0 var(--line)}
-.fgrid{display:grid;grid-template-columns:1fr;gap:24px;padding:28px 0}
-@media(min-width:720px){.fgrid{grid-template-columns:1.5fr 1fr}}
-.fcol h4{font-size:.69rem;font-weight:800;letter-spacing:.22em;color:var(--red);padding-bottom:11px}
-.fcol p,.fcol a{color:var(--muted);font-size:.86rem;line-height:1.95;text-decoration:none;display:block}
+footer{background:var(--card);border-top:3px solid var(--red);margin-top:14px}
+.fgrid{display:grid;grid-template-columns:1fr;gap:22px;padding:28px 0}
+@media(min-width:720px){.fgrid{grid-template-columns:1.3fr 1fr 1fr}}
+.fcol h4{font-size:.68rem;font-weight:800;letter-spacing:.22em;color:var(--red);padding-bottom:12px}
+.fcol p,.fcol a{color:var(--muted);font-size:.86rem;line-height:1.9;text-decoration:none;display:block}
 .fcol a:hover{color:var(--red)}
-.fbrand{display:flex;align-items:center;gap:12px;padding-bottom:10px;min-width:0}
-.fbrand>div{min-width:0;overflow:hidden}
-.fbrand div{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.05rem;line-height:1.1}
-.fbrand div .k{color:var(--red)}.fbrand div .p{color:var(--gold)}
-.fbrand .sub{display:block;font-size:.56rem;letter-spacing:.26em;color:var(--muted);font-weight:700}
-.socials{display:flex;gap:11px;padding-top:14px}
-.socials a{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;
-  border:1px solid var(--line);background:var(--surf);color:var(--ink);
-  box-shadow:var(--hi),0 3px 0 color-mix(in srgb,var(--line) 70%,#000 9%),var(--d-amb);
-  transition:transform .15s var(--press),background .2s,color .2s}
-.socials a:hover{background:var(--red);border-color:var(--red);color:#fff;transform:translateY(-3px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 0 var(--red-lip),0 14px 22px -8px rgba(200,16,46,.5)}
-.socials svg{width:18px;height:18px;fill:currentColor}
+.fbrand{display:flex;align-items:center;gap:11px;padding-bottom:12px}
+.fbrand div{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:.98rem;line-height:1.1}
+.fbrand span{display:block;font-size:.56rem;letter-spacing:.34em;color:var(--red);font-weight:700}
 .fbot{border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:14px 0;color:var(--muted);font-size:.76rem}
-
-@media (prefers-reduced-motion: reduce){
-  *{transition-duration:.001ms !important;animation-duration:.001ms !important}
-  .day.av:hover,.slot:hover,.confirm:hover,.socials a:hover,.tbtn:hover,.navb:hover{transform:none}
-  .card{transition:none}
-  .confirm::after{display:none}
-}
 </style>
 </head>
 <body>
 
+<!-- shared SVG defs for the logo gradients -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="klpRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E12942"/><stop offset="1" stop-color="#9C0A23"/>
+    </linearGradient>
+    <linearGradient id="klpGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6C24E"/><stop offset="1" stop-color="#A9851A"/>
+    </linearGradient>
+  </defs>
+</svg>
+
 <header class="top">
-  <div class="wrap"><div class="toprow">
-    <span class="badge" role="img" aria-label="KLP Studio logo"></span>
-    <div class="brand">
-      <div class="l1"><span class="k">K</span><span class="l">L</span><span class="p">P</span> STUDIO</div>
-      <div class="l2">KENNY LEONORE PRODUCTIONS</div>
+  <div class="wrap">
+    <div class="toprow">
+      <!-- Round KLP Studio logo (inline SVG). For Odoo, swap for:
+           <img class="logo" src="/klp_studio/static/src/img/klp_logo.png" alt="KLP Studio"/> -->
+      <svg class="klp-logo" width="48" height="48" viewBox="0 0 120 120" role="img" aria-label="KLP Studio">
+        <circle class="disc" cx="60" cy="60" r="58"/>
+        <circle class="ring" cx="60" cy="60" r="57"/>
+        <text x="60" y="66" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="800" font-size="44" letter-spacing="1">
+          <tspan fill="url(#klpRed)">K</tspan><tspan fill="#17161A">L</tspan><tspan fill="url(#klpGold)">P</tspan>
+        </text>
+        <text x="60" y="88" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="600" font-size="12" letter-spacing="5" fill="#17161A">STUDIO</text>
+      </svg>
+      <div class="brand"><div class="l1">KENNY LEONORE</div><div class="l2">PRODUCTIONS</div></div>
+      <button class="tbtn" id="tt" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
     </div>
-    <button class="tbtn" id="tt" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
-  </div></div>
-  <div class="tri"></div>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <button class="on" data-go="prices">Pricing</button>
+      <button data-go="sub">Enrollment</button>
+      <button data-go="teachers">Teachers</button>
+    </nav>
+  </div>
 </header>
 
-<div class="band">
-  <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
-  <h1>Choose a new date &amp; time</h1>
-  <p>KLP STUDIO · MAPOU</p>
+<div class="hero">
+  <div class="mosaic" aria-hidden="true">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125bd0a889095c8cdb0a.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/6467e5db680f2647c441bd34.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647ae31ee283d58f515798e3.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647addceea3c6c7122b0c7af.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/646a125b680f26669343977b.jpeg" alt="">
+    <img src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_600/u_https://assets.cdn.filesafe.space/NlnGHkSBM7o7Y2cxtSa7/media/647add7de283d5d19e5797ae.jpeg" alt="">
+  </div>
+  <div class="in"><h1>KLP <span class="acc">Studio</span></h1><p>INSPIRED MIND BY MAKING MUSIC</p></div>
 </div>
 
 <main class="wrap">
-  <div class="grid" id="grid">
-    <!-- LEFT -->
-    <div class="card left-tilt" id="left">
-      <div class="session">
-        <span class="tag">SESSION TO RESCHEDULE</span>
-        <div class="stu">Jaden Harel</div>
-        <div class="ln">Drum · Rick Cupidon · Studio B</div>
-        <div class="wh">Currently <s>Fri, June 13 · 12:00 – 12:30</s></div>
-      </div>
 
-      <p class="rolenote" id="rolenote">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        <span id="rolenote-txt">Only slots where the teacher and the studio are free, within school hours, are shown.</span>
-      </p>
+  <!-- ============ PRICING ============ -->
+  <section class="sec on" id="sec-prices">
+    <h2 class="title">Price List</h2>
+    <p class="sub">Our official pricing - pick a category to start your enrollment.</p>
+    <div class="pgrid" id="pgrid"></div>
+    <p class="vat">All prices are VAT exclusive. VAT is charged at 15%.</p>
+  </section>
 
-      <div class="cal-head">
-        <button class="navb" id="pm" onclick="navMonth(-1)" aria-label="Previous month">‹</button>
-        <b id="mtitle">—</b>
-        <button class="navb" id="nm" onclick="navMonth(1)" aria-label="Next month">›</button>
-      </div>
-      <div class="cal" id="cal" role="grid" aria-label="Available days"></div>
-      <div class="legend">
-        <span><i></i>available slots</span>
-        <span><s>13</s>&nbsp;current session</span>
-      </div>
+  <!-- ============ ENROLLMENT ============ -->
+  <section class="sec" id="sec-sub">
+    <h2 class="title">Enrollment</h2>
+    <p class="sub">Just like the studio subscription form - your request is reviewed by our team and confirmed on WhatsApp within 24 h. Nothing is charged automatically.</p>
+    <div class="steps" id="steps">
+      <div class="step act" data-s="0"><span class="n">1</span><span>Contact</span></div>
+      <div class="step" data-s="1"><span class="n">2</span><span>Service</span></div>
+      <div class="step" data-s="2"><span class="n">3</span><span>Details</span></div>
+      <div class="step" data-s="3"><span class="n">4</span><span>Preview</span></div>
     </div>
 
-    <!-- RIGHT -->
-    <div>
-      <div class="card sideCard side" id="side">
-        <h3>NEW SLOT</h3>
-        <div class="dt" id="dtitle">—</div>
-        <div class="checks" id="checks"></div>
-        <div class="slots" id="slots" aria-live="polite"></div>
-        <button class="confirm" id="cbtn" disabled onclick="doConfirm()">CONFIRM THIS SLOT</button>
-        <a class="alt" href="https://wa.me/23059804605">No slot works for you? Message us</a>
+    <!-- STEP 1 - contact + payment + honeypot -->
+    <div class="card pane" data-p="0">
+      <label for="cn">Full name</label>
+      <input id="cn" autocomplete="name" placeholder="e.g. Sarah Lebon" maxlength="80">
+      <div class="err" id="e-cn">Please enter your name.</div>
+      <div class="two">
+        <div><label for="cw">WhatsApp number</label><input id="cw" type="tel" inputmode="tel" autocomplete="tel" placeholder="+230 5XXX XXXX" maxlength="20"><div class="err" id="e-cw">A valid Mauritian number is required.</div></div>
+        <div><label for="cm">Email (optional)</label><input id="cm" type="email" autocomplete="email" placeholder="you@email.com" maxlength="120"></div>
       </div>
+      <label>Payment method</label>
+      <div class="chips" id="pay"></div>
+      <!-- honeypot: must stay empty; real users never see it -->
+      <input class="hp" id="website" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="navrow"><button class="btn red" onclick="next(0)">Continue</button></div>
     </div>
-  </div>
 
-  <!-- SUCCESS -->
-  <div class="card done" id="done">
-    <div class="ck" aria-hidden="true">✓</div>
-    <h2>This session is rescheduled</h2>
-    <p class="lead">A confirmation is on its way to both parties on WhatsApp.</p>
-    <div class="meet">
-      <div class="mrow"><span class="k">What</span><span>Drum — Jaden Harel</span></div>
-      <div class="mrow"><span class="k">Teacher</span><span>Rick Cupidon · Studio B</span></div>
-      <div class="mrow"><span class="k">When</span><span><s id="d-old">—</s><br><span class="new" id="d-new">—</span></span></div>
+    <!-- STEP 2 - service category -->
+    <div class="card pane" data-p="1" style="display:none">
+      <label style="padding-top:0">Service Category</label>
+      <div class="chips" id="cats"></div>
+      <div class="navrow"><button class="btn gh" onclick="back(1)">Back</button><button class="btn red" onclick="next(1)">Continue</button></div>
     </div>
-    <a class="alt" href="https://wa.me/23059804605">Any question? Message us on WhatsApp</a>
-  </div>
+
+    <!-- STEP 3 - details -->
+    <div class="card pane" data-p="2" style="display:none">
+      <div id="lesson-zone">
+        <div id="students"></div>
+        <button class="add" onclick="addStudent()">+ Add another child</button>
+        <div class="err" id="e-st" style="padding-top:10px">Complete each student's name and lesson type.</div>
+      </div>
+      <div id="svc-zone" style="display:none">
+        <label style="padding-top:0">Requested services</label>
+        <div id="svclist"></div>
+        <div class="two">
+          <div><label for="svc-date">Preferred date</label><input type="date" id="svc-date"></div>
+          <div><label for="svc-note">Note (optional)</label><input id="svc-note" maxlength="200" placeholder="Anything we should know?"></div>
+        </div>
+        <div class="err" id="e-svc" style="padding-top:10px">Select at least one service.</div>
+      </div>
+      <div class="navrow"><button class="btn gh" onclick="back(2)">Back</button><button class="btn red" onclick="next(2)">Continue</button></div>
+    </div>
+
+    <!-- STEP 4 - preview -->
+    <div class="card pane" data-p="3" style="display:none">
+      <div class="prev">
+        <div class="ph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg>
+          Preview - KLP Studio Quotation
+        </div>
+        <div class="pb" id="preview"></div>
+      </div>
+      <div class="navrow"><button class="btn gh" onclick="back(3)">Back</button><button class="btn red" id="confirmBtn" onclick="submitAll()">Confirm request</button></div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="card done" id="done">
+      <div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2>Request sent</h2>
+      <p>Welcome to Kenny Leonore Productions! Our team will message you on WhatsApp within 24 h.</p>
+      <div class="ref">Your quotation reference: <b id="d-ref">-</b></div>
+      <div class="prev"><div class="ph" id="d-name">-</div><div class="pb" id="d-detail" style="font-size:.88rem;color:var(--muted)">-</div></div>
+    </div>
+  </section>
+
+  <!-- ============ TEACHERS ============ -->
+  <section class="sec" id="sec-teachers">
+    <h2 class="title">Our teachers</h2>
+    <p class="sub">The KLP Studio teaching team.</p>
+    <div class="tgrid" id="tgrid"></div>
+  </section>
 </main>
 
-<!-- MOBILE confirm bar -->
-<div class="mbar" id="mbar"><div class="in">
-  <div class="pk" id="mpk">Pick a day on the calendar</div>
-  <button class="confirm" id="cbtn2" disabled onclick="doConfirm()">CONFIRM THIS SLOT</button>
-</div></div>
-
 <footer>
-  <div class="tri"></div>
   <div class="wrap">
     <div class="fgrid">
       <div class="fcol">
         <div class="fbrand">
-          <span class="badge sm" role="img" aria-label="KLP Studio logo"></span>
-          <div><span class="k">K</span>L<span class="p">P</span> STUDIO<span class="sub">KENNY LEONORE PRODUCTIONS</span></div>
+          <svg class="klp-logo" width="40" height="40" viewBox="0 0 120 120" role="img" aria-label="KLP Studio">
+            <circle class="disc" cx="60" cy="60" r="58"/>
+            <circle class="ring" cx="60" cy="60" r="57"/>
+            <text x="60" y="66" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="800" font-size="44" letter-spacing="1"><tspan fill="url(#klpRed)">K</tspan><tspan fill="#17161A">L</tspan><tspan fill="url(#klpGold)">P</tspan></text>
+            <text x="60" y="88" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="600" font-size="12" letter-spacing="5" fill="#17161A">STUDIO</text>
+          </svg>
+          <div>KENNY LEONORE<span>PRODUCTIONS</span></div>
         </div>
-        <p>“Inspired mind by making music” — professional studio and music school in Mauritius.</p>
-        <div class="socials">
-          <a href="https://www.facebook.com/kennyleonorePRO/" aria-label="Facebook" title="Facebook">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-7h2.6l.4-3h-3V9.1c0-.9.3-1.5 1.6-1.5h1.5V4.9c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9V11H8v3h2.5v7h3z"/></svg>
-          </a>
-          <a href="https://www.instagram.com/kennyleonore" aria-label="Instagram" title="Instagram">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.3c2.5 0 2.8 0 3.8.1 1 0 1.5.2 1.8.3.5.2.8.4 1.1.7.3.3.5.7.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.3.1 3.8s0 2.8-.1 3.8c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.3.3-.7.5-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.3.1-3.8.1s-2.8 0-3.8-.1c-1 0-1.5-.2-1.8-.3-.5-.2-.8-.4-1.1-.7-.3-.3-.5-.7-.7-1.1-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.3-.1-3.8s0-2.8.1-3.8c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.3-.3.7-.5 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.3-.1 3.8-.1M12 2.6c-2.6 0-2.9 0-3.9.1-1 0-1.7.2-2.3.4-.6.3-1.2.6-1.7 1.1-.5.5-.9 1-1.1 1.7-.2.6-.4 1.3-.4 2.3-.1 1-.1 1.3-.1 3.9s0 2.9.1 3.9c0 1 .2 1.7.4 2.3.3.6.6 1.2 1.1 1.7.5.5 1 .9 1.7 1.1.6.2 1.3.4 2.3.4 1 .1 1.3.1 3.9.1s2.9 0 3.9-.1c1 0 1.7-.2 2.3-.4.6-.3 1.2-.6 1.7-1.1.5-.5.9-1 1.1-1.7.2-.6.4-1.3.4-2.3.1-1 .1-1.3.1-3.9s0-2.9-.1-3.9c0-1-.2-1.7-.4-2.3-.3-.6-.6-1.2-1.1-1.7-.5-.5-1-.9-1.7-1.1-.6-.2-1.3-.4-2.3-.4-1-.1-1.3-.1-3.9-.1zm0 4.6a4.8 4.8 0 100 9.6 4.8 4.8 0 000-9.6zm0 7.9a3.1 3.1 0 110-6.2 3.1 3.1 0 010 6.2zm6.1-8.1a1.1 1.1 0 11-2.2 0 1.1 1.1 0 012.2 0z"/></svg>
-          </a>
-          <a href="https://www.youtube.com/@kennyleonore" aria-label="YouTube" title="YouTube">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 002.4 7.2 26 26 0 002 12a26 26 0 00.4 4.8 2.5 2.5 0 001.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8A26 26 0 0022 12a26 26 0 00-.4-4.8zM10 15.2V8.8l5.2 3.2-5.2 3.2z"/></svg>
-          </a>
-        </div>
+        <p>&ldquo;Inspired mind by making music&rdquo; - professional studio and music school in Mauritius.</p>
       </div>
       <div class="fcol">
         <h4>CONTACT</h4>
         <p>Unit 8 Building 8, Quartier Des Serres,<br>Rue Labourdonnais, Mapou</p>
         <a href="tel:+23059804605">+230 5980-4605</a>
         <a href="mailto:klp@kennyleonore.com">klp@kennyleonore.com</a>
-        <a href="https://www.kennyleonore.com">kennyleonore.com</a>
+      </div>
+      <div class="fcol">
+        <h4>FOLLOW</h4>
+        <a href="https://www.kennyleonore.com" target="_blank" rel="noopener">kennyleonore.com</a>
+        <a href="https://www.facebook.com/kennyleonorePRO/" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://www.youtube.com/@kennyleonore" target="_blank" rel="noopener">YouTube</a>
       </div>
     </div>
-    <div class="fbot"><span>© 2026 Kenny Leonore Productions Ltd</span><span>KLP Studio · Mapou</span></div>
+    <div class="fbot"><span>&copy; 2026 Kenny Leonore Productions Ltd</span><span>Prices VAT exclusive - VAT 15%</span></div>
   </div>
 </footer>
 
 <script>
-/* ===================== CROSS-AVAILABILITY ENGINE =====================
-   In production these calendars come from Odoo (calendar.event) via the
-   JSON /slots route. Here: realistic demo data. The ROLE is fixed by the
-   token server-side — there is NO parent/teacher switch in the UI.        */
-const SCHOOL  = { open:"09:00", close:"19:00", closedDows:[0] };  /* Sunday closed */
-const WINDOW  = { from:"2026-06-14", to:"2026-07-12" };           /* J+1 .. J+35 */
-const SESSION = { date:"2026-06-13", time:"12:00", dur:30, room:"Studio B" };
-const ROLE    = "parent";  /* production: derived from the token (parent | teacher) */
+/* ====== real data ====== */
+const PRICES = {
+  lesson:{name:"Music Lessons", items:[
+    ["30-Minute Music Lesson",800,"A focused one-to-one 30-minute session"],
+    ["1-Hour Music Lesson",1500,"An immersive one-to-one session"]]},
+  rental:{name:"Studio Rental", items:[
+    ["30-Minute Studio Rental",1500,"A private studio session (recording / video)"],
+    ["1-Hour Studio Rental",3000,"A dedicated one-hour studio session"],
+    ["Whole Day/Night Studio Rental",25000,"Exclusive full-day studio access"]]},
+  prod:{name:"Music Production", items:[
+    ["Live Musician For Recording",5000,"Experienced session musicians"],
+    ["Editing, Mixing & Mastering",6000,"Professional sound refinement"],
+    ["Music Arrangement",8000,"Structuring and arranging your track"]]},
+  perf:{name:"Music Performance", items:[
+    ["Music Playlist Curation",3000,"Custom music selection",true], /* per month */
+    ["Duo Juvy & Kenny",20000,"An elegant live voice & piano duo"],
+    ["KLP Band",50000,"An energetic live band, all styles"]]},
+};
+const CATS=[["lesson","Music Lesson"],["rental","Studio Rental"],["prod","Music Production"],["perf","Music Performance"]];
+const LESSON_TYPES=["Drum","Guitar","Meditation Recording","Music Production","Piano","Singing","Violin"];
+const ROOMS={"Drum":"Studio B","Music Production":"Studio A","Meditation Recording":"Studio A"};
+const MODES=["In-Home","Online","In-Studio"];
+const DURS=[["30 minutes",800],["45 minutes",null],["1 hour",1500],["1 h 30",null]];
+const RECS=[["Weekly",4],["Bi-weekly",2],["Monthly",1],["One-Time",1]];
+const PAYS=["Juice","Cash"];
+/* Teacher capabilities mirror the Odoo onchange _onchange_lesson_filter_teacher:
+   the Teacher list is filtered by Lesson Type (x_studio_many2many_field..._lesson_type)
+   AND Lesson Mode (x_studio_lesson_mode). Per-teacher modes default to all three until
+   set in Odoo. "Meditation Recording" is paired with Music Production (same Studio A). */
+const ALL_MODES=["In-Home","Online","In-Studio"];
+const TEACHERS=[
+  {name:"Kenny Leonore",tag:"Piano · Singing",types:["Piano","Singing"],modes:ALL_MODES},
+  {name:"Juvy Leonore", tag:"Singing",        types:["Singing"],        modes:ALL_MODES},
+  {name:"Rick Cupidon", tag:"Drum",           types:["Drum"],           modes:ALL_MODES},
+  {name:"Julian Danz",  tag:"Guitar",         types:["Guitar"],         modes:ALL_MODES},
+  {name:"Marcus Thave", tag:"Piano",          types:["Piano"],          modes:ALL_MODES},
+  {name:"Tiana R.",     tag:"Violin",         types:["Violin"],         modes:ALL_MODES},
+  {name:"Faneva R.",    tag:"Guitar",         types:["Guitar"],         modes:ALL_MODES},
+  {name:"Rianala A.",   tag:"Music Production",types:["Music Production","Meditation Recording"],modes:ALL_MODES},
+];
+const DAYS=["No preference","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const TIMES=[];for(let h=9;h<=18;h++){TIMES.push(String(h).padStart(2,"0")+":00");TIMES.push(String(h).padStart(2,"0")+":30");}
 
-/* Teacher's calendar (Rick Cupidon) — his other lessons */
-function busyTeacher(d){ const w=d.getDay(); const L=[["12:30","14:00"]];
-  if(w===2)L.push(["16:00","18:00"]); if(w===6)L.push(["09:00","10:30"]); if(w===4)L.push(["09:00","11:00"]); return L; }
-/* Compatible room (Studio B) occupied by other sessions */
-function busyRoom(d){ const w=d.getDay(); const L=[["10:00","11:00"]];
-  if(w===3)L.push(["14:00","17:00"]); if(w===6)L.push(["15:00","19:00"]); return L; }
-/* Student's calendar (Jaden) — other lessons / family constraints */
-function busyStudent(d){ const w=d.getDay(); const L=[];
-  if(w===1)L.push(["15:00","17:00"]); if(w===5)L.push(["09:00","12:00"]); if(w===2)L.push(["09:00","10:00"]); return L; }
+let state={pay:0,cat:"lesson",students:[],svcQty:{},step:0};
+const fmt=n=>"Rs "+n.toLocaleString("en-US");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-const toMin = s => { const [h,m]=s.split(":").map(Number); return h*60+m; };
-const toHM  = v => String(Math.floor(v/60)).padStart(2,"0")+":"+String(v%60).padStart(2,"0");
-const overlaps = (a0,a1,iv) => iv.some(([b0,b1]) => a0 < toMin(b1) && toMin(b0) < a1);
+/* theme */
+function toggleTheme(){const h=document.documentElement;h.setAttribute("data-theme",h.getAttribute("data-theme")==="dark"?"light":"dark");}
 
-function slotsFor(isoStr){
-  const [y,m,dd] = isoStr.split("-").map(Number);
-  const d = new Date(y, m-1, dd);
-  if (isoStr < WINDOW.from || isoStr > WINDOW.to) return [];
-  if (SCHOOL.closedDows.includes(d.getDay())) return [];
-  const busy = (ROLE === "parent")
-    ? [...busyTeacher(d), ...busyRoom(d)]    /* parent : teacher ∩ room */
-    : [...busyStudent(d), ...busyRoom(d)];   /* teacher: student ∩ room */
-  const out = [];
-  for (let v = toMin(SCHOOL.open); v + SESSION.dur <= toMin(SCHOOL.close); v += 30)
-    if (!overlaps(v, v + SESSION.dur, busy)) out.push(toHM(v));
-  return out;
-}
-/* ==================================================================== */
-
-const DOWS   = ["Mo","Tu","We","Th","Fr","Sa","Su"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const WD     = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const OLD_LABEL = "Fri, June 13 · 12:00 – 12:30";
-const MIN_VIEW = {y:2026,m:5}, MAX_VIEW = {y:2026,m:6};
-
-let view={y:2026,m:5}, selDay=null, selTime=null;
-
-const iso  = (y,m,d) => y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-const endT = x => toHM(toMin(x)+SESSION.dur);
-function fmtDay(s){ const [y,m,d]=s.split("-").map(Number); const dt=new Date(y,m-1,d);
-  return WD[dt.getDay()]+", "+MONTHS[m-1]+" "+d; }
-
-function toggleTheme(){ const h=document.documentElement, dark=h.getAttribute("data-theme")==="dark";
-  h.setAttribute("data-theme", dark?"light":"dark"); document.getElementById("tt").textContent=dark?"🌙":"☀️"; }
-
-function navMonth(d){ view.m+=d; if(view.m<0){view.m=11;view.y--;} if(view.m>11){view.m=0;view.y++;} renderCal(); }
-
-function renderCal(){
-  document.getElementById("mtitle").textContent = MONTHS[view.m]+" "+view.y;
-  document.getElementById("pm").disabled = (view.y===MIN_VIEW.y && view.m===MIN_VIEW.m);
-  document.getElementById("nm").disabled = (view.y===MAX_VIEW.y && view.m===MAX_VIEW.m);
-  const cal=document.getElementById("cal"); cal.innerHTML="";
-  DOWS.forEach(d=>{ const e=document.createElement("div"); e.className="dow"; e.textContent=d; cal.appendChild(e); });
-  const lead=(new Date(view.y,view.m,1).getDay()+6)%7;
-  for(let i=0;i<lead;i++) cal.appendChild(document.createElement("div"));
-  const days=new Date(view.y,view.m+1,0).getDate();
-  for(let d=1;d<=days;d++){
-    const key=iso(view.y,view.m,d);
-    const b=document.createElement("button"); b.type="button"; b.className="day"; b.textContent=d;
-    if(key===SESSION.date){ b.classList.add("old"); b.setAttribute("aria-label","Current session, "+fmtDay(key)); b.disabled=true; }
-    else if(slotsFor(key).length){
-      b.classList.add("av");
-      b.setAttribute("aria-label",fmtDay(key)+", slots available");
-      if(key===selDay){ b.classList.add("sel"); b.setAttribute("aria-current","date"); }
-      b.onclick=()=>{ selDay=key; selTime=null; renderCal(); renderSlots(); refresh(); };
-    } else b.disabled=true;
-    cal.appendChild(b);
-  }
-}
-
-function renderSlots(){
-  const box=document.getElementById("slots"), title=document.getElementById("dtitle"), checks=document.getElementById("checks");
-  const second = ROLE==="parent" ? "Teacher free" : "Student free";
-  checks.innerHTML = '<span>✓ School 09:00–19:00</span><span>✓ '+second+'</span><span>✓ Studio B free</span>';
-  if(!selDay){ title.textContent="Pick a day on the calendar"; box.innerHTML='<div class="empty">Compatible slots will appear here.</div>'; return; }
-  title.textContent=fmtDay(selDay);
-  const list=slotsFor(selDay);
-  if(!list.length){ box.innerHTML='<div class="empty">No compatible slot that day — try another one.</div>'; return; }
-  box.innerHTML="";
-  list.forEach(x=>{
-    const b=document.createElement("button"); b.type="button"; b.className="slot";
-    b.textContent=x+" – "+endT(x);
-    b.setAttribute("aria-pressed", x===selTime);
-    b.onclick=()=>{ selTime=x; renderSlots(); refresh(); };
-    box.appendChild(b);
-  });
-}
-
-function refresh(){
-  const ok=!!(selDay&&selTime);
-  document.getElementById("cbtn").disabled=!ok;
-  document.getElementById("cbtn2").disabled=!ok;
-  document.getElementById("mpk").innerHTML = ok
-    ? '<b>'+fmtDay(selDay)+' · '+selTime+' – '+endT(selTime)+'</b>'
-    : 'Pick a day on the calendar';
-}
-
-function doConfirm(){
-  if(!selDay||!selTime) return;
-  /* POST /klp/reschedule/<token>/confirm { slot_start: selDay+"T"+selTime }
-     -> atomic write on the existing calendar.event + anti-collision re-check. */
-  document.getElementById("left").style.display="none";
-  document.getElementById("side").style.display="none";
-  document.getElementById("mbar").style.display="none";
-  document.getElementById("grid").style.display="block";
-  document.getElementById("d-old").textContent=OLD_LABEL;
-  document.getElementById("d-new").textContent=fmtDay(selDay)+" · "+selTime+" – "+endT(selTime);
-  document.getElementById("done").style.display="block";
+/* section nav */
+document.getElementById("nav").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-go]"); if(!b)return; goTo(b.dataset.go);
+});
+function goTo(go){
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("on",x.dataset.go===go));
+  document.querySelectorAll(".sec").forEach(s=>s.classList.toggle("on",s.id==="sec-"+go));
   window.scrollTo({top:0,behavior:"smooth"});
 }
+function goSub(cat){state.cat=cat;renderCats();renderDetails();show(0);goTo("sub");}
 
-/* subtle 3D tilt on the left card (desktop, motion allowed) */
-(function(){
-  const card=document.getElementById("left");
-  if(!card || !window.matchMedia("(min-width:880px)").matches) return;
-  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  card.addEventListener("pointermove",e=>{
-    if(e.pointerType!=="mouse") return;
-    const r=card.getBoundingClientRect();
-    const px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
-    card.style.transform="rotateX("+(-py*2.2)+"deg) rotateY("+(px*2.6)+"deg) translateY(-2px)";
+/* pricing */
+function renderPrices(){
+  const g=document.getElementById("pgrid");g.innerHTML="";
+  CATS.forEach(([key,label])=>{
+    const grp=PRICES[key];
+    const rows=grp.items.map(([n,p,d,perMonth])=>
+      `<div class="pline"><div><div class="n">${esc(n)}</div><div class="d">${esc(d)}</div></div><div class="p">${fmt(p)}${perMonth?'<span class="per">/month</span>':""}</div></div>`).join("");
+    const c=document.createElement("div");c.className="card pcard";
+    c.innerHTML=`<h3><span class="dot"></span>${esc(label)}</h3>${rows}<button class="pcta" onclick="goSub('${key}')">Choose this category</button>`;
+    g.appendChild(c);
   });
-  card.addEventListener("pointerleave",()=>{ card.style.transform="rotateX(0) rotateY(0)"; });
-})();
+}
+/* teachers */
+function renderTeachers(){
+  const g=document.getElementById("tgrid");g.innerHTML="";
+  TEACHERS.forEach(({name,tag})=>{
+    const ini=name.split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase();
+    const c=document.createElement("div");c.className="card tcard";
+    c.innerHTML=`<div class="avatar">${ini}</div><div class="tname">${esc(name)}</div><span class="ttag">${esc(tag)}</span>`;
+    g.appendChild(c);
+  });
+}
+/* generic chips */
+function chips(el,labels,get,set){
+  const w=document.getElementById(el);if(!w)return;w.innerHTML="";
+  labels.forEach((lb,i)=>{
+    const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=lb;
+    b.setAttribute("aria-pressed",get()===i);
+    b.onclick=()=>{set(i);chips(el,labels,get,set);};
+    w.appendChild(b);
+  });
+}
+function renderPay(){chips("pay",PAYS,()=>state.pay,i=>state.pay=i);}
+function renderCats(){
+  const w=document.getElementById("cats");w.innerHTML="";
+  CATS.forEach(([key,label])=>{
+    const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=label;
+    b.setAttribute("aria-pressed",state.cat===key);
+    b.onclick=()=>{state.cat=key;renderCats();};
+    w.appendChild(b);
+  });
+}
+/* details */
+function blank(){return{name:"",age:"",lt:null,mode:2,teacher:"",dur:0,rec:0,day:0,start:"15:00",fdate:"",trial:false};}
+/* client-side mirror of the Odoo _onchange_lesson_filter_teacher domain */
+function teacherMatches(s){
+  const type=s.lt!==null?LESSON_TYPES[s.lt]:null;
+  const mode=MODES[s.mode]||null;
+  return TEACHERS.filter(tt=>(!type||tt.types.includes(type))&&(!mode||tt.modes.includes(mode)));
+}
+function teacherOptionsHTML(s){
+  return '<option value="">No preference</option>'+
+    teacherMatches(s).map(tt=>`<option value="${esc(tt.name)}" ${s.teacher===tt.name?"selected":""}>${esc(tt.name)}</option>`).join("");
+}
+function refreshTeachers(i){
+  const s=state.students[i],sel=document.getElementById("tc-"+i);if(!sel)return;
+  if(s.teacher&&!teacherMatches(s).some(tt=>tt.name===s.teacher))s.teacher="";
+  sel.innerHTML=teacherOptionsHTML(s);
+  const note=document.getElementById("tn-"+i);
+  if(note)note.style.display=(s.lt!==null&&teacherMatches(s).length===0)?"block":"none";
+}
+function addStudent(){if(state.students.length>=10)return;state.students.push(blank());renderStudents();}
+function rmStudent(i){state.students.splice(i,1);if(!state.students.length)state.students.push(blank());renderStudents();}
+function endT(s){const m={0:30,1:45,2:60,3:90}[s.dur];const[h,mn]=s.start.split(":").map(Number);const x=h*60+mn+m;return String(Math.floor(x/60)%24).padStart(2,"0")+":"+String(x%60).padStart(2,"0");}
+function renderDetails(){
+  const isL=state.cat==="lesson";
+  document.getElementById("lesson-zone").style.display=isL?"block":"none";
+  document.getElementById("svc-zone").style.display=isL?"none":"block";
+  if(isL)renderStudents(); else renderSvc();
+}
+function roomHint(i,lt){const h=document.getElementById("rh-"+i);if(!h)return;const r=lt!==null?ROOMS[LESSON_TYPES[lt]]:null;
+  if(r){h.style.display="block";h.textContent="♪ This session takes place in "+r+".";}else h.style.display="none";}
+function renderStudents(){
+  const w=document.getElementById("students");w.innerHTML="";
+  state.students.forEach((s,i)=>{
+    const c=document.createElement("div");c.className="scard";
+    c.innerHTML=`
+      <div class="head"><span class="who">STUDENT ${i+1}</span>${state.students.length>1?`<button class="rm" onclick="rmStudent(${i})">Remove</button>`:""}</div>
+      <div class="two">
+        <div><label>Student's name</label><input value="${esc(s.name)}" oninput="state.students[${i}].name=this.value" placeholder="e.g. Marin Lebon" maxlength="80"></div>
+        <div><label>Age</label><input type="number" min="3" max="99" value="${esc(s.age)}" oninput="state.students[${i}].age=this.value"></div>
+      </div>
+      <label>Lesson Type</label><div class="chips" id="lt-${i}"></div><div class="hint" id="rh-${i}"></div>
+      <div class="two">
+        <div><label>Lesson Mode</label><div class="chips" id="md-${i}"></div></div>
+        <div><label>Lesson Duration</label><div class="chips" id="du-${i}"></div></div>
+      </div>
+      <div class="two">
+        <div><label>Teacher</label><select id="tc-${i}" onchange="state.students[${i}].teacher=this.value">${teacherOptionsHTML(s)}</select><div class="hint" id="tn-${i}" style="display:none">No teacher is set for this lesson type &amp; mode yet - leave on &ldquo;No preference&rdquo; and the studio will assign one.</div></div>
+        <div><label>Recurrence</label><div class="chips" id="rc-${i}"></div></div>
+      </div>
+      <div class="two">
+        <div><label>Preferred day</label><select onchange="state.students[${i}].day=this.selectedIndex">${DAYS.map((d,di)=>`<option ${di===s.day?"selected":""}>${esc(d)}</option>`).join("")}</select></div>
+        <div><label>First session date</label><input type="date" value="${esc(s.fdate)}" onchange="state.students[${i}].fdate=this.value"></div>
+      </div>
+      <div class="two">
+        <div><label>Start</label><select onchange="state.students[${i}].start=this.value;renderStudents()">${TIMES.map(x=>`<option ${x===s.start?"selected":""}>${x}</option>`).join("")}</select></div>
+        <div><label>End</label><input value="${endT(s)}" disabled></div>
+      </div>
+      <div class="switch"><input type="checkbox" id="tr-${i}" ${s.trial?"checked":""} onchange="state.students[${i}].trial=this.checked"><span>Trial Lesson</span></div>`;
+    w.appendChild(c);
+    chips("lt-"+i,LESSON_TYPES,()=>s.lt,v=>{s.lt=v;roomHint(i,v);refreshTeachers(i);});
+    roomHint(i,s.lt);
+    chips("md-"+i,MODES,()=>s.mode,v=>{s.mode=v;refreshTeachers(i);});
+    chips("du-"+i,DURS.map(d=>d[0]),()=>s.dur,v=>{s.dur=v;renderStudents();});
+    chips("rc-"+i,RECS.map(r=>r[0]),()=>s.rec,v=>s.rec=v);
+    refreshTeachers(i);
+  });
+}
+function renderSvc(){
+  const w=document.getElementById("svclist");w.innerHTML="";
+  PRICES[state.cat].items.forEach(([n,p,,perMonth])=>{
+    const q=state.svcQty[n]||0;
+    const r=document.createElement("div");r.className="svc";
+    r.innerHTML=`<div><b>${esc(n)}</b></div><div style="display:flex;align-items:center;gap:13px"><span class="p">${fmt(p)}${perMonth?'<span class="per">/month</span>':""}</span>
+      <span class="qty"><button aria-label="decrease" onclick="bump(${PRICES[state.cat].items.findIndex(it=>it[0]===n)},-1)">&minus;</button><span class="q">${q}</span><button aria-label="increase" onclick="bump(${PRICES[state.cat].items.findIndex(it=>it[0]===n)},1)">+</button></span></div>`;
+    w.appendChild(r);
+  });
+}
+function bump(idx,d){const n=PRICES[state.cat].items[idx][0];state.svcQty[n]=Math.max(0,Math.min(20,(state.svcQty[n]||0)+d));renderSvc();}
 
-renderCal(); renderSlots(); refresh();
+/* preview (Odoo portal style) */
+function buildPreview(){
+  const box=document.getElementById("preview");
+  let rows="",ht=0,toConfirm=false;
+  if(state.cat==="lesson"){
+    state.students.forEach(s=>{
+      if(!s.name.trim()||s.lt===null)return;
+      const[,price]=DURS[s.dur];
+      const spm=RECS[s.rec][1];
+      const prod=(s.dur===0?"30-Minute Music Lesson":s.dur===2?"1-Hour Music Lesson":DURS[s.dur][0]+" Music Lesson");
+      const amount=price!==null?price*spm:null;
+      if(amount!==null)ht+=amount; else toConfirm=true;
+      const meta=`${esc(s.name.trim())} - ${LESSON_TYPES[s.lt]} &middot; ${MODES[s.mode]} &middot; ${RECS[s.rec][0]} &middot; ${DAYS[s.day]} ${s.start}-${endT(s)}${s.trial?" &middot; Trial":""}`;
+      rows+=`<tr><td><b>${esc(prod)}</b><br><span class="meta">${meta}</span></td>
+        <td class="r">${spm}</td><td class="r">${price!==null?fmt(price):'<span class="conf">to confirm</span>'}</td><td class="r">${amount!==null?fmt(amount):'<span class="conf">to confirm</span>'}</td></tr>`;
+    });
+  } else {
+    PRICES[state.cat].items.forEach(([n,p,,perMonth])=>{
+      const q=state.svcQty[n]||0;if(!q)return;
+      ht+=p*q;
+      rows+=`<tr><td><b>${esc(n)}</b>${perMonth?'<br><span class="meta">billed per month</span>':""}</td><td class="r">${q}</td><td class="r">${fmt(p)}</td><td class="r">${fmt(p*q)}</td></tr>`;
+    });
+    const d=document.getElementById("svc-date").value;
+    if(d)rows+=`<tr><td colspan="4" class="meta">Preferred date: ${esc(d)}</td></tr>`;
+  }
+  const tva=Math.round(ht*0.15), tt=ht+tva;
+  box.innerHTML=`
+    <p class="who-line"><b>${esc(document.getElementById("cn").value.trim())}</b> &middot; ${esc(document.getElementById("cw").value.trim())} &middot; ${PAYS[state.pay]} &middot; ${CATS.find(c=>c[0]===state.cat)[1]}</p>
+    <table class="tbl"><thead><tr><th>Product / Service</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="tot"><span class="lab">Untaxed Amount</span><span class="v">${fmt(ht)}</span></div>
+    <div class="tot"><span class="lab">VAT (15%)</span><span class="v">${fmt(tva)}</span></div>
+    <div class="tot big"><span class="lab">Total</span><span class="v">${fmt(tt)}</span></div>
+    <p class="pv-note">Official KLP Studio pricing. Lines marked &ldquo;to confirm&rdquo; will be finalised by the studio. This is a draft quotation - nothing is charged automatically.${toConfirm?"":""}</p>`;
+}
+
+/* wizard */
+const MU=/^(\+?230)?\s*5\d{3}\s*\d{4}$/;
+function show(n){state.step=n;
+  document.querySelectorAll(".pane").forEach(p=>p.style.display=+p.dataset.p===n?"block":"none");
+  document.querySelectorAll(".step").forEach(s=>{const k=+s.dataset.s;s.classList.toggle("act",k===n);s.classList.toggle("ok",k<n);});
+  document.getElementById("sec-sub").scrollIntoView({behavior:"smooth"});}
+function next(from){
+  if(from===0){
+    const n=document.getElementById("cn"),w=document.getElementById("cw");
+    const vn=n.value.trim().length>=2, vw=MU.test(w.value.replace(/[-.]/g," "));
+    n.classList.toggle("bad",!vn);w.classList.toggle("bad",!vw);
+    document.getElementById("e-cn").style.display=vn?"none":"block";
+    document.getElementById("e-cw").style.display=vw?"none":"block";
+    if(!vn||!vw)return;}
+  if(from===1){renderDetails();}
+  if(from===2){
+    if(state.cat==="lesson"){
+      const ok=state.students.every(s=>s.name.trim().length>=2&&s.lt!==null);
+      document.getElementById("e-st").style.display=ok?"none":"block";if(!ok)return;
+    } else {
+      const ok=Object.values(state.svcQty).some(q=>q>0);
+      document.getElementById("e-svc").style.display=ok?"none":"block";if(!ok)return;
+    }
+    buildPreview();}
+  show(from+1);}
+function back(from){show(from-1);}
+
+/* build JSON payload for /klp/inscription/submit */
+function buildPayload(){
+  const base={
+    customer:{name:document.getElementById("cn").value.trim(),
+              whatsapp:document.getElementById("cw").value.trim(),
+              email:document.getElementById("cm").value.trim()},
+    payment_method:PAYS[state.pay],
+    category:state.cat,
+    website:document.getElementById("website").value /* honeypot */
+  };
+  if(state.cat==="lesson"){
+    base.students=state.students.filter(s=>s.name.trim()&&s.lt!==null).map(s=>({
+      name:s.name.trim(), age:s.age,
+      lesson_type:LESSON_TYPES[s.lt],
+      lesson_mode:MODES[s.mode],
+      lesson_duration:DURS[s.dur][0],
+      teacher:s.teacher||null,
+      recurrence:RECS[s.rec][0],
+      preferred_day:DAYS[s.day],
+      first_session_date:s.fdate,
+      start_time:s.start, end_time:endT(s),
+      trial:s.trial
+    }));
+  } else {
+    base.services=Object.entries(state.svcQty).filter(([,q])=>q>0).map(([name,qty])=>({name,qty}));
+    base.preferred_date=document.getElementById("svc-date").value;
+    base.note=document.getElementById("svc-note").value.trim();
+  }
+  return base;
+}
+function localRef(){return "KLP-Q-"+String(Date.now()).slice(-6);}
+
+async function submitAll(){
+  const btn=document.getElementById("confirmBtn");
+  const payload=buildPayload();
+  let ref=localRef();
+  // honeypot tripped -> behave normally on screen, send nothing
+  if(payload.website){showSuccess(ref);return;}
+  btn.disabled=true;btn.textContent="Sending...";
+  try{
+    const res=await fetch("/klp/inscription/submit",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({jsonrpc:"2.0",method:"call",params:payload})
+    });
+    if(res.ok){const data=await res.json();const r=data&&data.result;
+      if(r&&r.reference)ref=r.reference;}
+  }catch(e){/* standalone preview / offline: fall back to local ref */}
+  btn.disabled=false;btn.textContent="Confirm request";
+  showSuccess(ref);
+}
+function showSuccess(ref){
+  document.querySelectorAll(".pane").forEach(p=>p.style.display="none");
+  document.getElementById("steps").style.display="none";
+  document.getElementById("done").style.display="block";
+  document.getElementById("d-ref").textContent=ref;
+  document.getElementById("d-name").textContent=document.getElementById("cn").value.trim();
+  document.getElementById("d-detail").textContent=
+    state.cat==="lesson"
+      ? state.students.filter(s=>s.name.trim()).map(s=>s.name.trim()+" - "+(s.lt!==null?LESSON_TYPES[s.lt]:"")).join(" · ")
+      : Object.entries(state.svcQty).filter(([,q])=>q>0).map(([n,q])=>n+" x"+q).join(" · ");
+  document.getElementById("done").scrollIntoView({behavior:"smooth"});
+}
+
+/* init */
+state.students.push(blank());
+renderPrices();renderTeachers();renderPay();renderCats();renderDetails();
 </script>
 </body>
 </html>
