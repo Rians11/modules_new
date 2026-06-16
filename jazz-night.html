@@ -79,9 +79,12 @@ body{
 .tag{margin-top:18px;font-weight:300;font-size:15px;letter-spacing:.28em;
   text-transform:uppercase;color:var(--ice)}
 
-/* saxophone / note motif */
-.note{font-size:54px;margin:26px 0 8px;color:var(--sky);
-  text-shadow:0 0 24px rgba(90,169,255,.6)}
+/* art-deco motif */
+.motif{margin:30px 0 6px;filter:drop-shadow(0 6px 18px rgba(90,169,255,.35))}
+.motif .ray{stroke:var(--gold);stroke-width:1.4;opacity:.85}
+.motif .ring{fill:none;stroke:var(--sky);stroke-width:1.6}
+.motif .ring2{fill:none;stroke:rgba(231,200,115,.7);stroke-width:1}
+.motif .dotc{fill:var(--gold)}
 
 .lineup{margin-top:auto;width:100%}
 .acts{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;
@@ -127,7 +130,19 @@ body{
 
       <p class="tag">Standards · Bebop · Soul</p>
 
-      <div class="note">♪&nbsp;&#127927;&nbsp;♫</div>
+      <svg class="motif" width="150" height="92" viewBox="0 0 150 92" aria-hidden="true">
+        <g transform="translate(75 46)">
+          <line class="ray" x1="-66" y1="0" x2="-30" y2="0"/>
+          <line class="ray" x1="-60" y1="-16" x2="-28" y2="-8"/>
+          <line class="ray" x1="-60" y1="16" x2="-28" y2="8"/>
+          <line class="ray" x1="66" y1="0" x2="30" y2="0"/>
+          <line class="ray" x1="60" y1="-16" x2="28" y2="-8"/>
+          <line class="ray" x1="60" y1="16" x2="28" y2="8"/>
+          <circle class="ring" r="22"/>
+          <circle class="ring2" r="15"/>
+          <circle class="dotc" r="3.2"/>
+        </g>
+      </svg>
 
       <div class="lineup">
         <p class="acts">
