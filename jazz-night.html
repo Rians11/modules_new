@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blue Note — Soirée Jazz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#040b1c;
+  --deep:#071633;
+  --blue:#0b3d91;
+  --azure:#1e6fff;
+  --sky:#5aa9ff;
+  --ice:#bfe0ff;
+  --gold:#e7c873;
+  --paper:#eaf2ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Poppins',system-ui,sans-serif;
+  background:radial-gradient(circle at 50% -10%,#0c2a63 0%,#040b1c 60%);
+  min-height:100vh;display:grid;place-items:center;padding:32px;
+  color:var(--paper);
+}
+
+/* ===== POSTER ===== */
+.poster{
+  position:relative;width:680px;max-width:100%;aspect-ratio:2/3;
+  border-radius:18px;overflow:hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(30,111,255,.45) 0%, rgba(7,22,51,0) 55%),
+    linear-gradient(180deg,#071a3d 0%,#040b1c 70%,#020610 100%);
+  box-shadow:0 40px 90px rgba(0,0,0,.6),inset 0 0 0 1px rgba(122,170,255,.12);
+}
+
+/* decorative glow rings */
+.poster::before{
+  content:"";position:absolute;left:50%;top:24%;
+  width:520px;height:520px;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(90,169,255,.30) 0%,rgba(90,169,255,0) 60%);
+  filter:blur(6px);
+}
+
+/* film grain / starfield */
+.stars{position:absolute;inset:0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.7), transparent),
+    radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,.6), transparent),
+    radial-gradient(1.5px 1.5px at 64% 28%, rgba(191,224,255,.7), transparent),
+    radial-gradient(1px 1px at 28% 36%, rgba(255,255,255,.5), transparent),
+    radial-gradient(1px 1px at 88% 40%, rgba(255,255,255,.5), transparent),
+    radial-gradient(1.5px 1.5px at 8% 60%, rgba(191,224,255,.6), transparent);
+  opacity:.9}
+
+.frame{position:absolute;inset:22px;border:1px solid rgba(122,170,255,.30);
+  border-radius:10px;pointer-events:none}
+.frame::after{content:"";position:absolute;inset:6px;border:1px solid rgba(231,200,115,.30);border-radius:7px}
+
+.content{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;text-align:center;padding:56px 48px}
+
+.kicker{font-size:13px;letter-spacing:.42em;text-transform:uppercase;
+  color:var(--gold);font-weight:500;margin-bottom:10px}
+.kicker .dot{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--gold);vertical-align:middle;margin:0 12px 3px}
+
+.title{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:.92;
+  font-size:104px;letter-spacing:.01em;
+  background:linear-gradient(180deg,#ffffff 0%,#bfe0ff 55%,#5aa9ff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 40px rgba(90,169,255,.25)}
+.title em{display:block;font-style:italic;font-size:46px;font-weight:500;
+  letter-spacing:.04em;color:var(--gold);
+  -webkit-text-fill-color:var(--gold);margin-top:6px}
+
+.tag{margin-top:18px;font-weight:300;font-size:15px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--ice)}
+
+/* saxophone / note motif */
+.note{font-size:54px;margin:26px 0 8px;color:var(--sky);
+  text-shadow:0 0 24px rgba(90,169,255,.6)}
+
+.lineup{margin-top:auto;width:100%}
+.acts{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;
+  color:#fff;letter-spacing:.02em;line-height:1.5}
+.acts span{color:var(--gold)}
+
+.divider{width:60%;height:1px;margin:22px auto;
+  background:linear-gradient(90deg,transparent,rgba(231,200,115,.7),transparent)}
+
+.meta{display:flex;justify-content:center;gap:42px;margin-top:4px}
+.meta div{display:flex;flex-direction:column;gap:4px}
+.meta .big{font-size:30px;font-weight:600;color:#fff;font-family:'Cormorant Garamond',serif}
+.meta .small{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ice)}
+
+.footer{margin-top:26px;font-size:12px;letter-spacing:.26em;
+  text-transform:uppercase;color:rgba(191,224,255,.75)}
+.footer b{color:var(--gold);font-weight:600}
+
+@media(max-width:560px){
+  .content{padding:40px 30px}
+  .title{font-size:74px}.title em{font-size:34px}
+  .meta{gap:26px}
+}
+
+/* print */
+@media print{
+  body{background:#040b1c;padding:0}
+  .poster{box-shadow:none;width:100%;height:100vh;border-radius:0}
+}
+</style>
+</head>
+<body>
+  <article class="poster" role="img" aria-label="Affiche de la soirée jazz Blue Note">
+    <div class="stars"></div>
+    <div class="frame"></div>
+
+    <div class="content">
+      <p class="kicker">Live Jazz <span class="dot"></span> Édition Nocturne</p>
+
+      <h1 class="title">Blue Note
+        <em>Soirée Jazz</em>
+      </h1>
+
+      <p class="tag">Standards · Bebop · Soul</p>
+
+      <div class="note">♪&nbsp;&#127927;&nbsp;♫</div>
+
+      <div class="lineup">
+        <p class="acts">
+          The Midnight Quartet<br>
+          <span>·</span> Lina Cohen Trio <span>·</span><br>
+          DJ Set — Cool Blue
+        </p>
+
+        <div class="divider"></div>
+
+        <div class="meta">
+          <div>
+            <span class="big">Samedi 27 Juin</span>
+            <span class="small">Ouverture 20 h 00</span>
+          </div>
+          <div>
+            <span class="big">Le Caveau Bleu</span>
+            <span class="small">Entrée 15 €</span>
+          </div>
+        </div>
+
+        <p class="footer">Réservations <b>·</b> 034 12 345 67 <b>·</b> bluenote.live</p>
+      </div>
+    </div>
+  </article>
+</body>
+</html>
