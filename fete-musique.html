@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fête de la Musique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#161312;
+  --paper:#FBF3E2;   /* fond crème */
+  --pink:#F23E6D;
+  --yellow:#FFC83D;
+  --teal:#1FB6A6;
+  --violet:#5B3FD6;
+  --blue:#1E6FE8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Archivo',system-ui,sans-serif;background:#2a2a2a;
+  min-height:100vh;display:grid;place-items:center;padding:30px}
+
+.poster{position:relative;width:640px;max-width:100%;aspect-ratio:2/3;
+  background:var(--paper);color:var(--ink);overflow:hidden;
+  padding:46px 44px;display:flex;flex-direction:column}
+
+/* grain riso */
+.poster::after{content:"";position:absolute;inset:0;pointer-events:none;
+  opacity:.07;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* formes décoratives en aplats */
+.blob{position:absolute;border-radius:50%;mix-blend-mode:multiply;z-index:0}
+.b1{width:300px;height:300px;background:var(--yellow);right:-90px;top:-70px}
+.b2{width:210px;height:210px;background:var(--teal);left:-70px;top:230px}
+.b3{width:160px;height:160px;background:var(--pink);right:30px;top:300px}
+/* portée / ondulation */
+.wave{position:absolute;left:0;right:0;top:392px;height:120px;z-index:0;opacity:.9}
+
+.top{position:relative;z-index:2;display:flex;justify-content:space-between;
+  align-items:center;border-bottom:3px solid var(--ink);padding-bottom:10px;
+  font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.top .badge{background:var(--ink);color:var(--paper);padding:4px 10px;border-radius:30px;
+  letter-spacing:.1em}
+
+.head{position:relative;z-index:2;margin-top:46px}
+.kick{font-weight:800;font-size:16px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--pink);margin-bottom:8px}
+.title{font-family:'Archivo Black',sans-serif;font-weight:400;line-height:.86;
+  font-size:96px;letter-spacing:-.02em;text-transform:uppercase}
+.title .l1{color:var(--violet)}
+.title .l2{color:var(--pink)}
+.title .l3{color:var(--blue);-webkit-text-stroke:0}
+.title .stroke{color:transparent;-webkit-text-stroke:3px var(--ink)}
+
+.lead{position:relative;z-index:2;margin-top:24px;max-width:340px;
+  font-size:15.5px;line-height:1.5;font-weight:600}
+
+.foot{position:relative;z-index:2;margin-top:auto}
+.scene{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1.3;
+  text-transform:uppercase;letter-spacing:.01em;margin-bottom:26px}
+.scene .chip{display:inline-block;color:var(--paper);padding:1px 9px;border-radius:6px;margin:3px 4px 3px 0}
+.c-pink{background:var(--pink)}.c-teal{background:var(--teal)}
+.c-violet{background:var(--violet)}.c-blue{background:var(--blue)}
+
+.info{display:flex;justify-content:space-between;align-items:flex-end;
+  border-top:3px solid var(--ink);padding-top:14px;gap:16px}
+.info .d{font-family:'Archivo Black',sans-serif;font-size:30px;line-height:1;
+  text-transform:uppercase}
+.info .d span{color:var(--pink)}
+.info .m{text-align:right;font-weight:700;font-size:13px;line-height:1.5;
+  text-transform:uppercase;letter-spacing:.04em}
+.info .m b{display:block;font-family:'Archivo Black';font-size:18px;color:var(--violet)}
+.free{display:inline-block;margin-top:10px;background:var(--yellow);color:var(--ink);
+  font-family:'Archivo Black';font-size:13px;padding:5px 12px;border-radius:30px;
+  letter-spacing:.08em;transform:rotate(-3deg)}
+
+@media(max-width:520px){.poster{padding:34px 28px}.title{font-size:70px}}
+@media print{body{background:#fff;padding:0}.poster{width:100%;height:100vh}}
+</style>
+</head>
+<body>
+  <article class="poster">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+    <svg class="wave" viewBox="0 0 640 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 60 Q 80 10 160 60 T 320 60 T 480 60 T 640 60" fill="none" stroke="#5B3FD6" stroke-width="4" opacity=".55"/>
+      <path d="M0 80 Q 80 30 160 80 T 320 80 T 480 80 T 640 80" fill="none" stroke="#1FB6A6" stroke-width="4" opacity=".55"/>
+    </svg>
+
+    <header class="top">
+      <span>Ville de Tempo</span>
+      <span class="badge">21 Juin</span>
+    </header>
+
+    <div class="head">
+      <p class="kick">Édition 2026 · Toute la ville en musique</p>
+      <h1 class="title">
+        <span class="l1">Fête</span><br>
+        <span class="stroke">de la</span><br>
+        <span class="l2">Mus</span><span class="l3">ique</span>
+      </h1>
+    </div>
+
+    <p class="lead">Du midi à minuit, scènes ouvertes, fanfares de quartier et concerts gratuits. Sortez vos instruments — la rue est à vous.</p>
+
+    <footer class="foot">
+      <p class="scene">
+        <span class="chip c-pink">Rock</span>
+        <span class="chip c-teal">Jazz</span>
+        <span class="chip c-violet">Électro</span>
+        <span class="chip c-blue">Chanson</span>
+        <span class="chip c-pink">Hip-Hop</span>
+        <span class="chip c-teal">Classique</span>
+      </p>
+      <div class="info">
+        <div class="d">Dim. 21<br><span>Juin</span></div>
+        <div class="m">
+          <b>5 scènes en ville</b>
+          Place du Marché · Quais<br>Parc Central · Vieille Ville
+          <br><span class="free">Entrée libre</span>
+        </div>
+      </div>
+    </footer>
+  </article>
+</body>
+</html>
