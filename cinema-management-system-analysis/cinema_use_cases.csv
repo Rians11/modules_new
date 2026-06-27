@@ -1,0 +1,61 @@
+No,Use Case,Actor
+1,Add Movie,Manager
+2,Update Movie,Manager
+3,Delete Movie,Manager
+4,Search Movie by Title / Genre / Language / Rating,"Manager, Cashier, Customer"
+5,Add Genre,Manager
+6,Update Genre,Manager
+7,Delete Genre,Manager
+8,Search Genre by Name,Manager
+9,Add Cinema Hall (Screen),Manager
+10,Update Cinema Hall,Manager
+11,Delete Cinema Hall,Manager
+12,Search Cinema Hall by Name / Capacity / Type,Manager
+13,Configure Seat Layout,Manager
+14,Update Seat,Manager
+15,Delete Seat,Manager
+16,Search Seat by Hall / Row / Type,"Manager, Cashier"
+17,Add Screening (Showtime),Manager
+18,Update Screening,Manager
+19,Delete Screening,Manager
+20,Search Screening by Date / Movie / Hall / Time,"Manager, Cashier, Customer"
+21,Register Customer,"Customer, Cashier"
+22,Update Customer,"Customer, Cashier"
+23,Delete Customer,Manager
+24,Search Customer by Id / Name / Email / Phone,"Cashier, Manager"
+25,Add Staff,Manager
+26,Update Staff,Manager
+27,Delete Staff,Manager
+28,Search Staff by Id / Name / Role,Manager
+29,Check Seat Availability,"Customer, Cashier"
+30,Select Seats,"Customer, Cashier"
+31,Create Booking (Reservation),"Customer, Cashier"
+32,Update Booking,"Customer, Cashier"
+33,Cancel Booking,"Customer, Cashier"
+34,Search Booking by Id / Customer / Date / Screening,"Cashier, Manager"
+35,Process Payment,"Customer, Cashier, Payment Gateway"
+36,Issue Refund,"Cashier, Manager, Payment Gateway"
+37,Search Payment by Id / Date / Customer / Method,"Cashier, Manager"
+38,Generate Ticket (QR Code),"Cashier, Customer"
+39,Cancel Ticket,"Cashier, Customer"
+40,Validate Ticket at Entrance,Usher
+41,Search Ticket by Code / Booking,"Usher, Cashier"
+42,Add Snack / Concession Item,Manager
+43,Update Snack,Manager
+44,Delete Snack,Manager
+45,Search Snack by Name / Category,"Cashier, Manager"
+46,Create Snack Order,"Customer, Cashier"
+47,Update Snack Order,"Customer, Cashier"
+48,Cancel Snack Order,"Customer, Cashier"
+49,Search Snack Order by Id / Customer,"Cashier, Manager"
+50,Add Promotion / Discount,Manager
+51,Update Promotion,Manager
+52,Delete Promotion,Manager
+53,Apply Promotion to Booking,"Cashier, Customer"
+54,Search Promotion by Code / Period,"Cashier, Manager"
+55,Generate Sales Report,Manager
+56,Generate Hall Occupancy Report,Manager
+57,Generate Movie Performance Report,Manager
+58,Manage User Roles / Permissions,Manager
+59,Login,"Customer, Cashier, Usher, Manager"
+60,Logout,"Customer, Cashier, Usher, Manager"
