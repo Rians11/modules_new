@@ -3,70 +3,76 @@
 > **Name:** ANDRIAMPARANY Rianala Joan  **ID:** 2504_28605  **Cohort:** BSE25A/FT/2
 > File to submit as PDF: `AndriamparanyRianalaAssignment1.pdf`
 
-> A realistic, coherent model of how a real cinema operates: a customer books and pays for
-> a seat online or at the counter, a cashier sells and validates tickets, and a manager
-> runs the catalogue, scheduling, pricing and reports. **3 actors, 20 use cases, 8 tables.**
+> A realistic **counter-based** cinema: customers do not use the software. A **Cashier**
+> sells tickets at the box office (entering the customer's details), takes payment and
+> validates tickets at the entrance; a **Manager** runs movies, halls, showtimes, pricing
+> and reports. **2 operator actors (+ 1 secondary), 20 use cases, 6 tables.**
 
 ---
 
 ## 1. Brief Introduction (5 marks)
 
 The **Cinema Management System (CMS)** is an application that automates the operations of a
-modern cinema, from publishing the movie programme to selling tickets and reporting sales.
-It mirrors how a real cinema works.
+cinema. It is used by the cinema's staff at the box office; customers do not interact with
+the system directly.
 
-A **Customer** creates an account, browses the movies currently showing, looks at the
-available showtimes, selects a seat, pays and receives a ticket. The customer can review
-their bookings and cancel a booking within the allowed period. A **Cashier** at the box
-office performs the same booking on behalf of walk-in customers, takes payment at the
-counter, and validates tickets at the auditorium entrance. A **Manager** runs the cinema:
-maintaining the movie catalogue, scheduling showtimes in the cinema halls, setting ticket
-prices and consulting sales reports.
+A **Cashier** logs in to sell tickets: they look up the movies and showtimes, choose a free
+seat for the customer, enter the customer's name and phone, take payment, and the system
+issues the ticket and marks the seat as sold. The cashier can also cancel a ticket, view
+the list of sold tickets, and validate tickets at the auditorium entrance. A **Manager**
+runs the cinema: maintaining the movie catalogue, registering the cinema halls, scheduling
+showtimes, setting ticket prices and consulting sales reports. Because the manager is also
+a senior member of staff, the manager can perform every cashier task as well.
 
-The core operation is **ticket booking**: the system shows the seats available for a
-chosen showtime, the seat is reserved, payment is taken and a ticket is issued; the seat is
-then marked as sold so it can never be sold twice.
+The core operation is **selling a ticket**: the system shows the seats available for a
+chosen showtime, the seat is reserved for the customer, payment is taken and the ticket is
+issued; the seat is then marked sold so it can never be sold twice.
 
 Main objectives:
 
-- publish the movie programme and showtimes to customers;
-- sell tickets (online and at the counter) while preventing double-booking of seats;
-- handle payment and issue tickets;
+- keep reliable records of movies, halls and showtimes (full CRUD);
+- sell tickets at the counter while preventing double-booking of seats;
+- take payment and issue tickets, storing the customer's details;
 - give management reliable sales reports;
-- secure access through accounts and roles (Customer, Cashier, Manager).
+- secure access through staff accounts and roles (Manager, Cashier).
 
 **Actors:**
 
-- **Customer** — registers, books and pays for tickets, receives the ticket.
-- **Cashier** — sells tickets at the box office, takes payment, validates tickets at entry.
-- **Manager** — manages movies, showtimes, halls, pricing and reports.
+- **Manager** — *primary* actor; manages the catalogue, halls, showtimes, pricing and reports,
+  and can also perform every cashier task.
+- **Cashier** — *primary* actor; sells tickets, enters customer details, takes payment and
+  validates tickets at entry.
+- **Customer** — *secondary* actor; does **not** use the system, but provides their name and
+  phone to the cashier and receives the ticket.
 
 ---
 
 ## 2. List of Features (Use Cases) — table (5 marks)
 
 > Also in `cinema_use_cases.csv` / `Cinema_Management_System.xlsx` (open in Excel, export to PDF).
+> Note: because of the **Manager ▷ Cashier** generalization (§3), the Manager can also perform
+> every Cashier use case. The table lists the most specific role for each.
 
 | No | Use Case | Actor |
 |----|----------|-------|
-| 1 | Register Account | Customer |
-| 2 | Login | Customer, Cashier, Manager |
-| 3 | Logout | Customer, Cashier, Manager |
-| 4 | Search / Browse Movies | Customer, Cashier |
-| 5 | View Showtimes | Customer, Cashier |
-| 6 | Book Ticket | Customer, Cashier |
-| 7 | Select Seats | Customer, Cashier |
-| 8 | Make Payment | Customer, Cashier |
-| 9 | View My Bookings | Customer |
-| 10 | Cancel Booking | Customer, Cashier |
-| 11 | Validate Ticket at Entrance | Cashier |
+| 1 | Login | Manager, Cashier |
+| 2 | Logout | Manager, Cashier |
+| 3 | Search / View Movies | Cashier |
+| 4 | View Showtimes | Cashier |
+| 5 | Sell Ticket | Cashier (primary), Customer (secondary) |
+| 6 | Select Seat | Cashier |
+| 7 | Check Seat Availability | Cashier |
+| 8 | Take Payment | Cashier |
+| 9 | Cancel Ticket | Cashier |
+| 10 | Validate Ticket at Entrance | Cashier |
+| 11 | View Sold Tickets | Cashier |
 | 12 | Add Movie | Manager |
 | 13 | Update Movie | Manager |
 | 14 | Delete Movie | Manager |
-| 15 | Schedule Showtime | Manager |
-| 16 | Update Showtime | Manager |
-| 17 | Delete Showtime | Manager |
-| 18 | Manage Cinema Halls | Manager |
+| 15 | Manage Cinema Halls | Manager |
+| 16 | Schedule Showtime | Manager |
+| 17 | Update Showtime | Manager |
+| 18 | Delete Showtime | Manager |
 | 19 | Set Ticket Pricing | Manager |
 | 20 | View Sales Report | Manager |
 
@@ -74,32 +80,32 @@ Main objectives:
 
 ## 3. Use Case Diagram — to draw in StarUML (25 marks)
 
-One clean diagram with three actors.
+One clean diagram.
 
 ### Actors
-- **Customer** — stick figure on the **left**. Connected to: Register Account, Login, Logout,
-  Search Movies, View Showtimes, Book Ticket, View My Bookings, Cancel Booking.
-- **Cashier** — stick figure on the **left** (below Customer). Connected to: Login, Logout,
-  Search Movies, View Showtimes, Book Ticket, Cancel Booking, Validate Ticket at Entrance.
-- **Manager** — stick figure on the **right**. Connected to: Login, Logout, Add/Update/Delete
-  Movie, Schedule/Update/Delete Showtime, Manage Cinema Halls, Set Ticket Pricing, View Sales Report.
+- **Manager** — *primary*, stick figure top-left. Connected to: Add/Update/Delete Movie,
+  Manage Cinema Halls, Schedule/Update/Delete Showtime, Set Ticket Pricing, View Sales Report.
+- **Cashier** — *primary*, stick figure below the Manager. Connected to: Login, Logout,
+  Search Movies, View Showtimes, Sell Ticket, Cancel Ticket, Validate Ticket, View Sold Tickets.
+- **Customer** — *secondary*, stick figure on the **right**. Connected **only** to `Sell Ticket`.
 
 ### Associations
 - Plain lines (Association) from each actor to its use cases (list above).
-- `Login` and `Logout` are shared — connect all three actors to them.
-- `Book Ticket` is shared by Customer (online) and Cashier (counter).
+- Connect both Manager and Cashier to `Login` / `Logout`.
 
-### Relationships that earn the marks
-- **`<<include>>`** (dashed arrow, base → included). `Book Ticket` includes two mandatory steps:
-  - `Book Ticket` ──▷ `Select Seats`
-  - `Book Ticket` ──▷ `Make Payment`
-- *(Optional)* **Generalization** ▷: you may add a `Staff` parent actor for Cashier and Manager
-  (both are employees who log in), with `Cashier` and `Manager` generalising `Staff`. Keep it
-  only if your diagram stays readable.
+### Relationships that earn the marks (very important)
+- **Generalization** (solid line, hollow triangle ▷): **Manager ▷ Cashier**. The Manager
+  inherits every Cashier use case, so you do NOT need to also link the Manager to the selling
+  use cases — the generalization covers it.
+- **`<<include>>`** (dashed arrow, base → included). `Sell Ticket` includes three mandatory steps:
+  - `Sell Ticket` ──▷ `Select Seat`
+  - `Sell Ticket` ──▷ `Check Seat Availability`
+  - `Sell Ticket` ──▷ `Take Payment`
 
 > StarUML steps: `Model → Add Diagram → Use Case Diagram`. Drop **Actor** and **UseCase**
-> elements, link with **Association**, and use the **Include** tool for the two dashed
-> `<<include>>` arrows from *Book Ticket*. Export: `File → Export Diagram As → PNG`.
+> elements, link with **Association**, use **Generalization** from Manager to Cashier, and the
+> **Include** tool for the three dashed `<<include>>` arrows from *Sell Ticket*.
+> Export: `File → Export Diagram As → PNG`.
 
 ---
 
@@ -107,59 +113,60 @@ One clean diagram with three actors.
 
 Full specifications for the key use cases; replicate the short CRUD template for the rest.
 
-### UC-06 — Book Ticket  *(the core operation)*
+### UC-05 — Sell Ticket  *(the core operation)*
 
 | Field | Description |
 |-------|-------------|
-| **Use Case ID** | UC-06 |
-| **Use Case Name** | Book Ticket |
-| **Actor(s)** | Customer (online), Cashier (counter) |
-| **Description** | Reserves one or more seats for a showtime, takes payment and issues a ticket. |
-| **Preconditions** | The actor is logged in; a showtime with at least one free seat exists. |
-| **Postconditions** | A booking and ticket are saved; the chosen seats are marked as sold. |
-| **Trigger** | The actor selects a showtime and clicks "Book". |
+| **Use Case ID** | UC-05 |
+| **Use Case Name** | Sell Ticket |
+| **Actor(s)** | Cashier (primary), Customer (secondary) |
+| **Description** | Sells a ticket for a chosen showtime and seat: records the customer, takes payment and marks the seat as sold. |
+| **Preconditions** | The cashier is logged in; a showtime with at least one free seat exists. |
+| **Postconditions** | A ticket is saved against the showtime and customer; the seat is marked sold. |
+| **Trigger** | A customer asks to buy a ticket and the cashier selects a showtime. |
 
 **Main Flow**
-1. The actor selects a movie and a showtime.
-2. The system displays the seat map with available seats.
-3. The actor selects one or more seats (`<<include>>` Select Seats).
-4. The system reserves the seats and shows the total price.
-5. The actor confirms and pays (`<<include>>` Make Payment).
-6. On successful payment, the system saves the booking, issues the ticket(s) and marks the seats sold.
-7. The system shows/sends the ticket with a booking reference.
+1. The cashier selects a movie and a showtime.
+2. The cashier selects a seat for the customer (`<<include>>` Select Seat).
+3. The system checks the seat is still free (`<<include>>` Check Seat Availability).
+4. The cashier enters the customer's name and phone, and the ticket type (Adult/Kid).
+5. The system shows the price; the cashier takes payment (`<<include>>` Take Payment).
+6. The system saves the ticket and marks the seat as sold.
+7. The system prints/shows the ticket with the seat number and price.
 
 **Alternative / Exception Flows**
-- *3a. Seat taken meanwhile:* the system warns the actor and asks them to choose another seat.
-- *5a. Payment fails:* the system releases the reserved seats and shows an error; no ticket is issued.
+- *3a. Seat already sold:* the system shows "Seat already booked" and asks for another seat.
+- *5a. Payment not completed:* the seat is released and no ticket is issued.
+- *4a. Missing customer details:* the system shows a validation error.
 
 ---
 
-### UC-08 — Make Payment
+### UC-01 — Login
 
 | Field | Description |
 |-------|-------------|
-| **Use Case ID** | UC-08 |
-| **Use Case Name** | Make Payment |
-| **Actor(s)** | Customer, Cashier |
-| **Description** | Charges the customer for a booking. |
-| **Preconditions** | A booking with a total amount is awaiting payment. |
-| **Postconditions** | A payment record is created with status Paid or Failed. |
+| **Use Case ID** | UC-01 |
+| **Use Case Name** | Login |
+| **Actor(s)** | Manager, Cashier |
+| **Description** | Authenticates a staff member and opens the menu according to their role. |
+| **Preconditions** | The application is running; a valid staff account exists. |
+| **Postconditions** | The staff member is authenticated with role-based access. |
 
 **Main Flow**
-1. The system shows the amount due and the payment methods (Card, Mobile Money, Cash at counter).
-2. The actor chooses a method and provides the details.
-3. The system processes the payment and records it as Paid.
+1. The staff member enters username and password.
+2. The system validates the credentials and reads the role (Manager or Cashier).
+3. On success, the menu opens (full menu for Manager, selling menu for Cashier).
 
 **Alternative Flows**
-- *3a. Payment declined:* record the payment as Failed and notify the actor; the booking stays unpaid.
+- *2a. Invalid credentials:* the system shows "Invalid login credentials" and stays on the login screen.
 
 ---
 
-### UC-15 — Schedule Showtime
+### UC-16 — Schedule Showtime
 
 | Field | Description |
 |-------|-------------|
-| **Use Case ID** | UC-15 |
+| **Use Case ID** | UC-16 |
 | **Use Case Name** | Schedule Showtime |
 | **Actor(s)** | Manager |
 | **Description** | Schedules a movie in a hall at a given date, time and ticket price. |
@@ -187,12 +194,12 @@ Full specifications for the key use cases; replicate the short CRUD template for
 | **Description** | Adds a new movie to the catalogue. |
 | **Preconditions** | The manager is logged in. |
 | **Postconditions** | A new movie record is stored. |
-| **Main Flow** | 1. Open Movie Management. 2. Enter title, genre, duration, language, rating. 3. Save. 4. System validates and stores the movie. |
+| **Main Flow** | 1. Open Movie Management. 2. Enter title, genre, duration, rating. 3. Save. 4. System validates and stores the movie. |
 | **Alternative Flows** | *3a. Duplicate title / missing field:* show an error; the movie is not saved. |
 
-> **Repeat this short template** for: Update/Delete Movie, Update/Delete Showtime, Manage
-> Cinema Halls, Set Ticket Pricing, Register Account, View My Bookings, Cancel Booking,
-> Validate Ticket, View Sales Report, Logout.
+> **Repeat this short template** for: Update/Delete Movie, Manage Cinema Halls, Update/Delete
+> Showtime, Set Ticket Pricing, Search Movies, View Showtimes, Cancel Ticket, Validate Ticket,
+> View Sold Tickets, View Sales Report, Logout.
 
 ---
 
@@ -200,23 +207,22 @@ Full specifications for the key use cases; replicate the short CRUD template for
 
 > Hand sketches are enough; this is the field list per screen.
 
-**F1 — Register Account.** Full Name | Email | Phone | Password | Confirm Password → *Register*.
+**F1 — Login.** Username | Password → *Login*. (Role Manager/Cashier read from the account.)
 
-**F2 — Login.** Email/Username | Password → *Login*.
-
-**F3 — Movie Management (Manager).** Title | Genre | Duration | Language | Rating →
+**F2 — Movie Management (Manager).** Title | Genre | Duration | Rating →
 *Add*, *Update*, *Delete*; table of movies.
+
+**F3 — Hall Management (Manager).** Hall Name | Capacity → *Add*, *Update*, *Delete*; table of halls.
 
 **F4 — Showtime Scheduling (Manager).** Movie (dropdown) | Hall (dropdown) | Date | Time |
 Ticket Price → *Save*; table of showtimes.
 
-**F5 — Booking / Seat Selection.** Showtime (read-only info) | interactive Seat Map
-(Available / Selected / Sold) | selected seats list | total price → *Continue to Payment*.
+**F5 — Sell Ticket (Cashier).** Showtime (dropdown) | Seat Number (selection) |
+Customer Name | Customer Phone | Ticket Type (Adult/Kid) | Price (auto) → *Sell*.
 
-**F6 — Payment.** Amount Due (read-only) | Payment Method (Card / Mobile Money / Cash) |
-payment details → *Pay*.
+**F6 — Pricing (Manager).** Base Price | Adult Price | Kid Price → *Save*.
 
-**F7 — Ticket Pricing (Manager).** Hall/Category | Price → *Save*.
+**F7 — Sold Tickets (Cashier).** Table of sold tickets with a selectable row → *Cancel Ticket*.
 
 ---
 
@@ -224,38 +230,36 @@ payment details → *Pay*.
 
 > Hand sketches are enough.
 
-**O1 — Now Showing:** list/grid of movies with poster, title, genre, rating.
-**O2 — Showtimes screen:** for a movie, the list of dates, times, hall and price.
-**O3 — Seat map:** colour-coded seats (available / selected / sold).
-**O4 — Ticket (e-ticket / printout):** cinema name, movie, date & time, hall, seat(s),
-price, booking reference, QR code.
-**O5 — Payment receipt:** receipt no., date, amount, method.
-**O6 — My Bookings screen:** the customer's bookings with status (Paid / Cancelled).
-**O7 — Sales Report (paper):** tickets sold and revenue for a period, grand total.
+**O1 — Main menu:** buttons by role (Manager: Movies/Halls/Showtimes/Pricing/Reports;
+Cashier: Sell/Tickets/Validate).
+**O2 — Movies table:** title, genre, duration, rating.
+**O3 — Showtimes table:** movie, hall, date, time, price.
+**O4 — Ticket (printout):** cinema name, movie, date & time, hall, seat number, type, price, ticket no.
+**O5 — Sold tickets table:** ticket no., showtime, seat, customer, price, date.
+**O6 — Sales Report (paper):** tickets sold and revenue for a period, grand total.
+**O7 — Error dialogs:** invalid login, duplicate movie title, showtime clash, seat already sold.
 
 ---
 
 ## 7. Database Design (Tables, Attributes, Data Types) (15 marks)
 
-> PK = Primary Key, FK = Foreign Key. Eight tables.
-
-### customer
-| Attribute | Data Type | Key |
-|-----------|-----------|-----|
-| customer_id | INT (auto) | PK |
-| full_name | VARCHAR(100) | |
-| email | VARCHAR(100) | |
-| phone | VARCHAR(20) | |
-| password | VARCHAR(255) | |
+> PK = Primary Key, FK = Foreign Key, UQ = Unique. Six tables.
 
 ### staff
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
 | staff_id | INT (auto) | PK |
 | full_name | VARCHAR(100) | |
-| username | VARCHAR(50) | |
+| username | VARCHAR(50) | UQ |
 | password | VARCHAR(255) | |
 | role | ENUM('MANAGER','CASHIER') | |
+
+### customer
+| Attribute | Data Type | Key |
+|-----------|-----------|-----|
+| customer_id | INT (auto) | PK |
+| full_name | VARCHAR(100) | |
+| phone | VARCHAR(20) | |
 
 ### movie
 | Attribute | Data Type | Key |
@@ -264,7 +268,6 @@ price, booking reference, QR code.
 | title | VARCHAR(120) | |
 | genre | VARCHAR(50) | |
 | duration | INT | |
-| language | VARCHAR(40) | |
 | rating | VARCHAR(10) | |
 
 ### cinema_hall
@@ -284,39 +287,25 @@ price, booking reference, QR code.
 | show_time | TIME | |
 | ticket_price | DECIMAL(8,2) | |
 
-### booking
-| Attribute | Data Type | Key |
-|-----------|-----------|-----|
-| booking_id | INT (auto) | PK |
-| customer_id | INT | FK → customer |
-| show_id | INT | FK → showtime |
-| booking_datetime | DATETIME | |
-| status | ENUM('Paid','Cancelled','Pending') | |
-| total_amount | DECIMAL(8,2) | |
+*UQ (hall_id, show_date, show_time) — prevents two showtimes in the same hall at the same time.*
 
 ### ticket
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
 | ticket_id | INT (auto) | PK |
-| booking_id | INT | FK → booking |
+| show_id | INT | FK → showtime |
+| customer_id | INT | FK → customer |
 | seat_number | VARCHAR(8) | |
+| ticket_type | ENUM('Adult','Kid') | |
 | price | DECIMAL(8,2) | |
+| purchase_datetime | DATETIME | |
 
-### payment
-| Attribute | Data Type | Key |
-|-----------|-----------|-----|
-| payment_id | INT (auto) | PK |
-| booking_id | INT | FK → booking |
-| amount | DECIMAL(8,2) | |
-| method | ENUM('Card','MobileMoney','Cash') | |
-| payment_datetime | DATETIME | |
-| status | ENUM('Paid','Failed') | |
+*UQ (show_id, seat_number) — enforces no double-booking: a seat is sold only once per showtime.*
 
 ### Relationships summary
 - movie 1—* showtime *—1 cinema_hall  (a showtime links one movie and one hall)
-- customer 1—* booking *—1 showtime  (a customer makes bookings for showtimes)
-- booking 1—* ticket  (one booking can hold several seats; one seat per showtime → no double-booking)
-- booking 1—1 payment  (each booking is paid once)
+- showtime 1—* ticket  (a showtime sells many tickets; one seat per showtime → no double-booking)
+- customer 1—* ticket  (a ticket records one customer)
 - staff operates the system (Manager / Cashier roles)
 
 ---

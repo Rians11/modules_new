@@ -1,4 +1,4 @@
-"""Generate the (realistic) Cinema Management System Excel workbook."""
+"""Generate the (counter-based, realistic) Cinema Management System Excel workbook."""
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
@@ -47,24 +47,24 @@ ws.append(["No", "Use Case", "Actor"])
 style_header(ws, 2, 3)
 
 use_cases = [
-    ("Register Account", "Customer"),
-    ("Login", "Customer, Cashier, Manager"),
-    ("Logout", "Customer, Cashier, Manager"),
-    ("Search / Browse Movies", "Customer, Cashier"),
-    ("View Showtimes", "Customer, Cashier"),
-    ("Book Ticket", "Customer, Cashier"),
-    ("Select Seats", "Customer, Cashier"),
-    ("Make Payment", "Customer, Cashier"),
-    ("View My Bookings", "Customer"),
-    ("Cancel Booking", "Customer, Cashier"),
+    ("Login", "Manager, Cashier"),
+    ("Logout", "Manager, Cashier"),
+    ("Search / View Movies", "Cashier"),
+    ("View Showtimes", "Cashier"),
+    ("Sell Ticket", "Cashier (primary), Customer (secondary)"),
+    ("Select Seat", "Cashier"),
+    ("Check Seat Availability", "Cashier"),
+    ("Take Payment", "Cashier"),
+    ("Cancel Ticket", "Cashier"),
     ("Validate Ticket at Entrance", "Cashier"),
+    ("View Sold Tickets", "Cashier"),
     ("Add Movie", "Manager"),
     ("Update Movie", "Manager"),
     ("Delete Movie", "Manager"),
+    ("Manage Cinema Halls", "Manager"),
     ("Schedule Showtime", "Manager"),
     ("Update Showtime", "Manager"),
     ("Delete Showtime", "Manager"),
-    ("Manage Cinema Halls", "Manager"),
     ("Set Ticket Pricing", "Manager"),
     ("View Sales Report", "Manager"),
 ]
@@ -73,29 +73,31 @@ for i, (uc, actor) in enumerate(use_cases, start=1):
     ws.cell(row=2 + i, column=1).alignment = CENTER
 box(ws, 2, 2 + len(use_cases), 3)
 ws.column_dimensions["A"].width = 6
-ws.column_dimensions["B"].width = 34
-ws.column_dimensions["C"].width = 30
+ws.column_dimensions["B"].width = 32
+ws.column_dimensions["C"].width = 36
 ws.freeze_panes = "A3"
 
 # ---- Sheet 2 : Use Case Specifications -------------------------------------
 ws2 = wb.create_sheet("Use Case Specifications")
 specs = [
-    ("UC-06", "Book Ticket", "Customer (online), Cashier (counter)",
-     "Reserves one or more seats for a showtime, takes payment and issues a ticket.",
-     "Actor is logged in; a showtime with at least one free seat exists.",
-     "A booking and ticket are saved; the chosen seats are marked sold.",
-     "1. Select a movie and showtime. 2. System shows the seat map. 3. Select seats (include Select "
-     "Seats). 4. System reserves seats and shows total. 5. Confirm and pay (include Make Payment). "
-     "6. On success, save booking, issue ticket(s), mark seats sold. 7. Show ticket with reference.",
-     "3a. Seat taken meanwhile -> choose another seat. 5a. Payment fails -> release seats, error, no ticket."),
-    ("UC-08", "Make Payment", "Customer, Cashier",
-     "Charges the customer for a booking.",
-     "A booking with a total amount is awaiting payment.",
-     "A payment record is created with status Paid or Failed.",
-     "1. Show amount due and methods (Card, Mobile Money, Cash). 2. Choose method, enter details. "
-     "3. Process payment, record as Paid.",
-     "3a. Declined -> record Failed, notify; booking stays unpaid."),
-    ("UC-15", "Schedule Showtime", "Manager",
+    ("UC-05", "Sell Ticket", "Cashier (primary), Customer (secondary)",
+     "Sells a ticket for a chosen showtime and seat: records the customer, takes payment and marks the seat sold.",
+     "Cashier is logged in; a showtime with at least one free seat exists.",
+     "A ticket is saved against the showtime and customer; the seat is marked sold.",
+     "1. Select a movie and showtime. 2. Select a seat (include Select Seat). 3. Check seat is free "
+     "(include Check Seat Availability). 4. Enter customer name, phone and ticket type (Adult/Kid). "
+     "5. Show price and take payment (include Take Payment). 6. Save ticket and mark seat sold. "
+     "7. Print/show the ticket.",
+     "3a. Seat already sold -> choose another seat. 5a. Payment not completed -> release seat, no ticket. "
+     "4a. Missing details -> validation error."),
+    ("UC-01", "Login", "Manager, Cashier",
+     "Authenticates a staff member and opens the menu according to their role.",
+     "Application running; a valid staff account exists.",
+     "Staff authenticated with role-based access.",
+     "1. Enter username and password. 2. System validates and reads the role. 3. On success, the menu "
+     "opens (full for Manager, selling for Cashier).",
+     "2a. Invalid credentials -> show 'Invalid login credentials', stay on login screen."),
+    ("UC-16", "Schedule Showtime", "Manager",
      "Schedules a movie in a hall at a given date, time and ticket price.",
      "Manager is logged in; at least one movie and one hall exist.",
      "A new showtime is stored.",
@@ -106,8 +108,7 @@ specs = [
      "Adds a new movie to the catalogue.",
      "Manager is logged in.",
      "A new movie record is stored.",
-     "1. Open Movie Management. 2. Enter title, genre, duration, language, rating. 3. Save. "
-     "4. Validate and store the movie.",
+     "1. Open Movie Management. 2. Enter title, genre, duration, rating. 3. Save. 4. Validate and store.",
      "3a. Duplicate title / missing field -> error, not saved."),
 ]
 fields = ["Use Case ID", "Use Case Name", "Actor(s)", "Description",
@@ -133,38 +134,31 @@ box(ws2, 1, r, 2)
 ws2.column_dimensions["A"].width = 22
 ws2.column_dimensions["B"].width = 92
 note = ws2.cell(row=r + 1, column=1,
-                value="Replicate this template for: Update/Delete Movie, Update/Delete Showtime, "
-                      "Manage Cinema Halls, Set Ticket Pricing, Register Account, View My Bookings, "
-                      "Cancel Booking, Validate Ticket, View Sales Report, Logout.")
+                value="Replicate this template for: Update/Delete Movie, Manage Cinema Halls, "
+                      "Update/Delete Showtime, Set Ticket Pricing, Search Movies, View Showtimes, "
+                      "Cancel Ticket, Validate Ticket, View Sold Tickets, View Sales Report, Logout.")
 note.font = Font(italic=True, color="808080")
 ws2.merge_cells(start_row=r + 1, start_column=1, end_row=r + 1, end_column=2)
 
 # ---- Sheet 3 : Database Design ---------------------------------------------
 ws3 = wb.create_sheet("Database Design")
 tables = {
-    "customer": [("customer_id", "INT (auto)", "PK"), ("full_name", "VARCHAR(100)", ""),
-                 ("email", "VARCHAR(100)", ""), ("phone", "VARCHAR(20)", ""),
-                 ("password", "VARCHAR(255)", "")],
     "staff": [("staff_id", "INT (auto)", "PK"), ("full_name", "VARCHAR(100)", ""),
-              ("username", "VARCHAR(50)", ""), ("password", "VARCHAR(255)", ""),
+              ("username", "VARCHAR(50)", "UQ"), ("password", "VARCHAR(255)", ""),
               ("role", "ENUM('MANAGER','CASHIER')", "")],
+    "customer": [("customer_id", "INT (auto)", "PK"), ("full_name", "VARCHAR(100)", ""),
+                 ("phone", "VARCHAR(20)", "")],
     "movie": [("movie_id", "INT (auto)", "PK"), ("title", "VARCHAR(120)", ""),
-              ("genre", "VARCHAR(50)", ""), ("duration", "INT", ""),
-              ("language", "VARCHAR(40)", ""), ("rating", "VARCHAR(10)", "")],
+              ("genre", "VARCHAR(50)", ""), ("duration", "INT", ""), ("rating", "VARCHAR(10)", "")],
     "cinema_hall": [("hall_id", "INT (auto)", "PK"), ("hall_name", "VARCHAR(60)", ""),
                     ("capacity", "INT", "")],
     "showtime": [("show_id", "INT (auto)", "PK"), ("movie_id", "INT", "FK -> movie"),
                  ("hall_id", "INT", "FK -> cinema_hall"), ("show_date", "DATE", ""),
-                 ("show_time", "TIME", ""), ("ticket_price", "DECIMAL(8,2)", "")],
-    "booking": [("booking_id", "INT (auto)", "PK"), ("customer_id", "INT", "FK -> customer"),
-                ("show_id", "INT", "FK -> showtime"), ("booking_datetime", "DATETIME", ""),
-                ("status", "ENUM('Paid','Cancelled','Pending')", ""),
-                ("total_amount", "DECIMAL(8,2)", "")],
-    "ticket": [("ticket_id", "INT (auto)", "PK"), ("booking_id", "INT", "FK -> booking"),
-               ("seat_number", "VARCHAR(8)", ""), ("price", "DECIMAL(8,2)", "")],
-    "payment": [("payment_id", "INT (auto)", "PK"), ("booking_id", "INT", "FK -> booking"),
-                ("amount", "DECIMAL(8,2)", ""), ("method", "ENUM('Card','MobileMoney','Cash')", ""),
-                ("payment_datetime", "DATETIME", ""), ("status", "ENUM('Paid','Failed')", "")],
+                 ("show_time", "TIME", "UQ(hall,date,time)"), ("ticket_price", "DECIMAL(8,2)", "")],
+    "ticket": [("ticket_id", "INT (auto)", "PK"), ("show_id", "INT", "FK -> showtime"),
+               ("customer_id", "INT", "FK -> customer"), ("seat_number", "VARCHAR(8)", "UQ(show,seat)"),
+               ("ticket_type", "ENUM('Adult','Kid')", ""), ("price", "DECIMAL(8,2)", ""),
+               ("purchase_datetime", "DATETIME", "")],
 }
 r = 1
 for tname, cols in tables.items():

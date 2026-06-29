@@ -1,21 +1,21 @@
 No,Use Case,Actor
-1,Register Account,Customer
-2,Login,"Customer, Cashier, Manager"
-3,Logout,"Customer, Cashier, Manager"
-4,Search / Browse Movies,"Customer, Cashier"
-5,View Showtimes,"Customer, Cashier"
-6,Book Ticket,"Customer, Cashier"
-7,Select Seats,"Customer, Cashier"
-8,Make Payment,"Customer, Cashier"
-9,View My Bookings,Customer
-10,Cancel Booking,"Customer, Cashier"
-11,Validate Ticket at Entrance,Cashier
+1,Login,"Manager, Cashier"
+2,Logout,"Manager, Cashier"
+3,Search / View Movies,Cashier
+4,View Showtimes,Cashier
+5,Sell Ticket,"Cashier (primary), Customer (secondary)"
+6,Select Seat,Cashier
+7,Check Seat Availability,Cashier
+8,Take Payment,Cashier
+9,Cancel Ticket,Cashier
+10,Validate Ticket at Entrance,Cashier
+11,View Sold Tickets,Cashier
 12,Add Movie,Manager
 13,Update Movie,Manager
 14,Delete Movie,Manager
-15,Schedule Showtime,Manager
-16,Update Showtime,Manager
-17,Delete Showtime,Manager
-18,Manage Cinema Halls,Manager
+15,Manage Cinema Halls,Manager
+16,Schedule Showtime,Manager
+17,Update Showtime,Manager
+18,Delete Showtime,Manager
 19,Set Ticket Pricing,Manager
 20,View Sales Report,Manager
