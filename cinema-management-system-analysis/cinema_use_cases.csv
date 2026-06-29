@@ -15,7 +15,7 @@ No,Use Case,Actor
 14,View Movie Shows,Administrator
 15,Update Ticket Pricing (Weekday/Weekend - Adult/Kid),Administrator
 16,View Ticket Pricing,Administrator
-17,Book Ticket (Sell Ticket),Administrator
+17,Book Ticket (Sell Ticket),"Administrator (primary), Customer (secondary)"
 18,Select Seat,Administrator
 19,Check Seat Availability,Administrator
 20,Calculate Ticket Price,Administrator

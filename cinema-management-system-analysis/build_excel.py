@@ -63,7 +63,7 @@ use_cases = [
     ("View Movie Shows", "Administrator"),
     ("Update Ticket Pricing (Weekday/Weekend - Adult/Kid)", "Administrator"),
     ("View Ticket Pricing", "Administrator"),
-    ("Book Ticket (Sell Ticket)", "Administrator"),
+    ("Book Ticket (Sell Ticket)", "Administrator (primary), Customer (secondary)"),
     ("Select Seat", "Administrator"),
     ("Check Seat Availability", "Administrator"),
     ("Calculate Ticket Price", "Administrator"),
@@ -77,14 +77,14 @@ for i, (uc, actor) in enumerate(use_cases, start=1):
 box(ws, 2, 2 + len(use_cases), 3)
 ws.column_dimensions["A"].width = 6
 ws.column_dimensions["B"].width = 52
-ws.column_dimensions["C"].width = 18
+ws.column_dimensions["C"].width = 32
 ws.freeze_panes = "A3"
 
 # ---- Sheet 2 : Use Case Specifications -------------------------------------
 ws2 = wb.create_sheet("Use Case Specifications")
 specs = [
-    ("UC-17", "Book Ticket (Sell Ticket)", "Administrator",
-     "Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable.",
+    ("UC-17", "Book Ticket (Sell Ticket)", "Administrator (primary), Customer (secondary)",
+     "Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable. The customer provides details and receives the ticket.",
      "Administrator is logged in; a show with a free seat exists; pricing is configured.",
      "A ticket record is saved; the chosen seat becomes unavailable.",
      "1. Select a movie show. 2. Select a seat (include Select Seat). 3. Check seat is free "

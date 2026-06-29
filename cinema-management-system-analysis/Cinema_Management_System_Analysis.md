@@ -33,8 +33,9 @@ The main objectives of the system are to:
 - keep reliable records of movies, halls, shows and sold tickets (full CRUD);
 - secure access through administrator authentication.
 
-**Actor:** Administrator (single user role; the customer's details are entered by the
-administrator and the customer does not log in to the system).
+**Actors:** **Administrator** — the *primary* actor who logs in and operates every
+function of the system. **Customer** — a *secondary* actor who does not log in but takes
+part in the ticket booking (provides personal details and receives the ticket).
 
 ---
 
@@ -61,7 +62,7 @@ administrator and the customer does not log in to the system).
 | 14 | View Movie Shows | Administrator |
 | 15 | Update Ticket Pricing (Weekday/Weekend – Adult/Kid) | Administrator |
 | 16 | View Ticket Pricing | Administrator |
-| 17 | Book Ticket (Sell Ticket) | Administrator |
+| 17 | Book Ticket (Sell Ticket) | Administrator (primary), Customer (secondary) |
 | 18 | Select Seat | Administrator |
 | 19 | Check Seat Availability | Administrator |
 | 20 | Calculate Ticket Price | Administrator |
@@ -76,8 +77,10 @@ administrator and the customer does not log in to the system).
 Because the system has a single actor and ~23 use cases, **one single diagram is enough**
 (clean and readable). Structure to reproduce in StarUML:
 
-### Actor
-- **Administrator** (one stick figure on the left).
+### Actors
+- **Administrator** — *primary* actor, one stick figure on the **left**. Connected to every use case.
+- **Customer** — *secondary* actor, one stick figure on the **right**. Connected **only** to
+  `Book Ticket` (the customer provides details and receives the ticket but never logs in).
 
 ### Use cases (ovals) — group them visually by area
 - **Authentication:** Login, Logout
@@ -90,6 +93,8 @@ Because the system has a single actor and ~23 use cases, **one single diagram is
 
 ### Associations
 - Connect **Administrator** to every use case with a plain line (Association).
+- Connect **Customer** to `Book Ticket` only (plain line). This shows Customer as a
+  secondary actor participating in that single use case.
 
 ### Relationships that earn the marks (very important)
 - **`<<include>>`** (dashed arrow, base → included). *Book Ticket* must include:
@@ -116,8 +121,8 @@ Full specifications for the key use cases. Replicate the short CRUD template for
 |-------|-------------|
 | **Use Case ID** | UC-17 |
 | **Use Case Name** | Book Ticket |
-| **Actor(s)** | Administrator |
-| **Description** | Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable. |
+| **Actor(s)** | Administrator (primary), Customer (secondary) |
+| **Description** | Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable. The customer provides their details and receives the ticket. |
 | **Preconditions** | The administrator is logged in; at least one show with a free seat exists; pricing is configured. |
 | **Postconditions** | A ticket record is saved; the chosen seat becomes unavailable. |
 | **Trigger** | The administrator opens the Ticket Booking screen and selects a show. |
