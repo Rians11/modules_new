@@ -194,7 +194,23 @@ def make_spec(no, name, actor):
     return dict(id=uc_id, name=name, actor=actor, desc="", pre=pre, post="", main="", alt="—")
 
 
-SPECS = [make_spec(i, n, a) for i, (n, a) in enumerate(USE_CASES, start=1)]
+UC_INFO = {name: (i, actor) for i, (name, actor) in enumerate(USE_CASES, start=1)}
+
+# Representative set: 4 CRUD templates (on Movie) + every business operation.
+SPEC_ORDER = [
+    "Add Movie", "Update Movie", "Delete Movie", "Search Movie by Title, Genre, Language",
+    "Add Booking", "Select Seat", "Add Payment", "Generate Ticket",
+    "Apply Promotion to Booking", "Issue Refund", "Validate Ticket at Entrance",
+    "Sell Snack", "Post Showtime", "Unpost Showtime",
+    "Generate Sales Report", "Generate Hall Occupancy Report",
+    "Manage User Roles", "Login", "Logout",
+]
+SPECS = [make_spec(UC_INFO[n][0], n, UC_INFO[n][1]) for n in SPEC_ORDER]
+
+SPEC_NOTE = ("Full specifications are given for the four CRUD templates (Add / Update / Delete / Search, "
+             "illustrated on Movie) and for every business operation. All the other CRUD use cases — "
+             "Update / Delete / Search of Genre, Cinema Hall, Showtime, Customer, Staff, Booking, Ticket, "
+             "Payment, Snack and Promotion — follow exactly the same four templates and are not repeated here.")
 
 TABLES = {
     "staff": [("staff_id", "INT", "PK"), ("full_name", "VARCHAR(100)", ""),
@@ -319,7 +335,11 @@ def build_excel():
     fields = [("Use Case ID", "id"), ("Use Case Name", "name"), ("Actor(s)", "actor"),
               ("Description", "desc"), ("Preconditions", "pre"), ("Postconditions", "post"),
               ("Main Flow", "main"), ("Alternative Flows", "alt")]
-    r = 1
+    ws2.merge_cells("A1:B1")
+    nt = ws2.cell(row=1, column=1, value=SPEC_NOTE)
+    nt.alignment = WRAP; nt.font = Font(italic=True, color="595959")
+    ws2.row_dimensions[1].height = 46
+    r = 3
     for s in SPECS:
         ws2.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
         h = ws2.cell(row=r, column=1, value=f"{s['id']}  —  {s['name']}")
@@ -420,6 +440,7 @@ def build_html():
 
     # 4 Specifications
     p.append('<div class="pb"></div><h1>4. Use Case Specifications</h1>')
+    p.append(f'<p class="note">{esc(SPEC_NOTE)}</p>')
     labels = [("Use Case ID", "id"), ("Use Case Name", "name"), ("Actor(s)", "actor"),
               ("Description", "desc"), ("Preconditions", "pre"), ("Postconditions", "post"),
               ("Main Flow", "main"), ("Alternative Flows", "alt")]
