@@ -340,17 +340,20 @@ def build_excel():
     nt.alignment = WRAP; nt.font = Font(italic=True, color="595959")
     ws2.row_dimensions[1].height = 46
     r = 3
+    black = Side(style="thin", color="000000")
+    BORDER_BK = Border(left=black, right=black, top=black, bottom=black)
     for s in SPECS:
         ws2.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
         h = ws2.cell(row=r, column=1, value=f"{s['id']}  —  {s['name']}")
-        h.fill = HEAD_FILL; h.font = WHITE
+        h.font = Font(bold=True, color="000000")
         h.alignment = Alignment(horizontal="left", vertical="center")
-        ws2.cell(row=r, column=2).fill = HEAD_FILL
+        h.border = BORDER_BK
+        ws2.cell(row=r, column=2).border = BORDER_BK
         r += 1
         for label, key in fields:
-            fc = ws2.cell(row=r, column=1, value=label); fc.fill = SUB_FILL; fc.font = BOLD
-            fc.alignment = WRAP; fc.border = BORDER
-            vc = ws2.cell(row=r, column=2, value=s[key]); vc.alignment = WRAP; vc.border = BORDER
+            fc = ws2.cell(row=r, column=1, value=label); fc.font = BOLD
+            fc.alignment = WRAP; fc.border = BORDER_BK
+            vc = ws2.cell(row=r, column=2, value=s[key]); vc.alignment = WRAP; vc.border = BORDER_BK
             r += 1
         r += 1
     ws2.column_dimensions["A"].width = 20
@@ -397,7 +400,9 @@ def build_html():
     th { background:#4472C4; color:#fff; }
     .small td, .small th { font-size:9.5pt; }
     .spec { margin-bottom:10px; }
-    .spec th { background:#D9E1F2; color:#1F3864; width:22%; }
+    .spec th, .spec td { border:1px solid #000; }
+    .spec th { background:#fff; color:#000; width:22%; }
+    .spec .hdr { background:#fff; color:#000; font-weight:bold; text-align:left; }
     .cover { text-align:center; margin-top:30%; }
     .cover .title { font-size:30pt; color:#1F3864; font-weight:bold; }
     .cover .sub { font-size:14pt; color:#444; margin-top:8px; }
@@ -445,7 +450,7 @@ def build_html():
               ("Description", "desc"), ("Preconditions", "pre"), ("Postconditions", "post"),
               ("Main Flow", "main"), ("Alternative Flows", "alt")]
     for s in SPECS:
-        p.append(f'<table class="spec"><tr><th colspan="2" style="background:#4472C4;color:#fff">{esc(s["id"])} — {esc(s["name"])}</th></tr>')
+        p.append(f'<table class="spec"><tr><th colspan="2" class="hdr">{esc(s["id"])} — {esc(s["name"])}</th></tr>')
         for label, key in labels[2:]:
             p.append(f"<tr><th>{esc(label)}</th><td>{esc(s[key])}</td></tr>")
         p.append("</table>")
