@@ -285,7 +285,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### staff
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| staff_id | INT (auto) | PK |
+| staff_id | INT | PK |
 | full_name | VARCHAR(100) | |
 | username | VARCHAR(50) | |
 | password | VARCHAR(255) | |
@@ -294,7 +294,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### customer
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| customer_id | INT (auto) | PK |
+| customer_id | INT | PK |
 | full_name | VARCHAR(100) | |
 | phone | VARCHAR(20) | |
 | email | VARCHAR(100) | |
@@ -302,13 +302,13 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### genre
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| genre_id | INT (auto) | PK |
+| genre_id | INT | PK |
 | name | VARCHAR(50) | |
 
 ### movie
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| movie_id | INT (auto) | PK |
+| movie_id | INT | PK |
 | title | VARCHAR(120) | |
 | genre_id | INT | FK → genre |
 | duration | INT | |
@@ -318,7 +318,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### cinema_hall
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| hall_id | INT (auto) | PK |
+| hall_id | INT | PK |
 | hall_name | VARCHAR(60) | |
 | hall_type | VARCHAR(20) | |
 | capacity | INT | |
@@ -326,7 +326,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### showtime
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| show_id | INT (auto) | PK |
+| show_id | INT | PK |
 | movie_id | INT | FK → movie |
 | hall_id | INT | FK → cinema_hall |
 | show_date | DATE | |
@@ -337,7 +337,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### booking
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| booking_id | INT (auto) | PK |
+| booking_id | INT | PK |
 | customer_id | INT | FK → customer |
 | show_id | INT | FK → showtime |
 | promotion_id | INT | FK → promotion (nullable) |
@@ -348,7 +348,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### ticket
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| ticket_id | INT (auto) | PK |
+| ticket_id | INT | PK |
 | booking_id | INT | FK → booking |
 | seat_number | VARCHAR(8) | |
 | price | DECIMAL(8,2) | |
@@ -357,7 +357,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### payment
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| payment_id | INT (auto) | PK |
+| payment_id | INT | PK |
 | booking_id | INT | FK → booking |
 | amount | DECIMAL(8,2) | |
 | method | ENUM('Card','Mobile','Cash') | |
@@ -367,7 +367,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### snack
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| snack_id | INT (auto) | PK |
+| snack_id | INT | PK |
 | name | VARCHAR(50) | |
 | category | VARCHAR(30) | |
 | price | DECIMAL(8,2) | |
@@ -375,7 +375,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### snack_order
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| order_id | INT (auto) | PK |
+| order_id | INT | PK |
 | booking_id | INT | FK → booking |
 | snack_id | INT | FK → snack |
 | quantity | INT | |
@@ -384,7 +384,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 ### promotion
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| promotion_id | INT (auto) | PK |
+| promotion_id | INT | PK |
 | code | VARCHAR(20) | |
 | description | VARCHAR(100) | |
 | discount_percent | DECIMAL(5,2) | |
