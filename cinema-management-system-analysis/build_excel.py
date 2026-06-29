@@ -71,7 +71,7 @@ use_cases = [
     ("Update Staff", "Manager"),
     ("Delete Staff", "Manager"),
     ("Search Staff by Id, Name, Role", "Manager"),
-    ("Add Booking", "Cashier (primary), Customer (secondary)"),
+    ("Add Booking", "Cashier"),
     ("Update Booking", "Cashier"),
     ("Delete Booking", "Cashier"),
     ("Search Booking by Id, Customer, Date, Showtime", "Cashier"),
@@ -116,8 +116,8 @@ ws.freeze_panes = "A3"
 # ---- Sheet 2 : Use Case Specifications -------------------------------------
 ws2 = wb.create_sheet("Use Case Specifications")
 specs = [
-    ("UC-25", "Add Booking", "Cashier (primary), Customer (secondary)",
-     "Creates a booking for a showtime: selects seats, applies any promotion, takes payment and issues the ticket.",
+    ("UC-25", "Add Booking", "Cashier",
+     "The cashier creates a booking for a showtime on behalf of a customer: selects seats, applies any promotion, takes payment and issues the ticket.",
      "Cashier is logged in; a posted showtime with a free seat exists.",
      "A booking, ticket and payment are saved; the seats are marked sold.",
      "1. Select a posted showtime. 2. Select seats (include Select Seat). 3. Enter/select the customer. "

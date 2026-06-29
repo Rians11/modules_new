@@ -23,7 +23,7 @@ No,Use Case,Actor
 22,Update Staff,Manager
 23,Delete Staff,Manager
 24,"Search Staff by Id, Name, Role",Manager
-25,Add Booking,"Cashier (primary), Customer (secondary)"
+25,Add Booking,Cashier
 26,Update Booking,Cashier
 27,Delete Booking,Cashier
 28,"Search Booking by Id, Customer, Date, Showtime",Cashier

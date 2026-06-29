@@ -22,8 +22,9 @@ movies, genres, cinema halls, showtimes, staff, snacks and promotions — publis
 showtimes (Post/Unpost), manages user roles and produces reports. A **Cashier** registers
 customers and sells tickets at the box office: creating a booking, selecting seats, applying
 promotions, taking payment, generating the ticket and validating tickets at the auditorium
-entrance. The **Customer** is a secondary actor: they provide their details to the cashier
-and receive the ticket, but do not operate the system.
+entrance. The **customer does not use the system**: they speak to the cashier, who enters
+everything. The customer is therefore a **data entity** (the `customer` table), not an actor —
+exactly like a movie or a hall is data, not an actor.
 
 Following the library/student example, every entity supports the four standard operations
 (Add, Update, Delete, Search), and the system adds the cinema-specific business operations
@@ -38,7 +39,8 @@ Main objectives:
 - give management reliable sales and occupancy reports;
 - secure access through staff accounts and roles.
 
-**Actors:** **Manager** (primary), **Cashier** (primary), **Customer** (secondary).
+**Actors:** **Manager** (primary), **Cashier** (primary). *(The customer is a data entity, not
+an actor, because they never operate the system — their details are entered by the cashier.)*
 
 ---
 
@@ -74,7 +76,7 @@ Main objectives:
 | 22 | Update Staff | Manager |
 | 23 | Delete Staff | Manager |
 | 24 | Search Staff by Id, Name, Role | Manager |
-| 25 | Add Booking | Cashier (primary), Customer (secondary) |
+| 25 | Add Booking | Cashier |
 | 26 | Update Booking | Cashier |
 | 27 | Delete Booking | Cashier |
 | 28 | Search Booking by Id, Customer, Date, Showtime | Cashier |
@@ -119,7 +121,7 @@ This is cleaner and easier to mark.
   the Manager also performs every Cashier use case automatically.
 - **Cashier** — primary (operational: customers, bookings, tickets, payments, sales searches,
   ticket validation, login).
-- **Customer** — secondary (provides details at booking; does not operate the system).
+- *(No Customer actor: the customer never operates the system, so it is a data entity, not an actor.)*
 
 > Rule used: each use case is linked to **one** actor only. Operational use cases → Cashier;
 > management use cases → Manager. Do **not** draw a Manager line on Cashier use cases — the
@@ -129,9 +131,7 @@ This is cleaner and easier to mark.
 1. **Movie & Genre Management** — UC 1–8. Actors: Manager (UC 4 → Cashier).
 2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (UC 16 → Cashier).
 3. **Customer & Staff Management** — UC 17–24. Actors: Cashier (customers), Manager (staff).
-4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier (all), Customer
-   (secondary, linked **only** to `Add Booking` — the seat/payment/ticket steps are reached
-   through the `<<include>>` relationships).
+4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actor: Cashier (all use cases).
 5. **Snack & Promotion** — UC 37–44. Actors: Manager (CRUD), Cashier (searches, Apply Promotion).
 6. **Reporting & Security** — UC 52–56. Actors: Manager (reports, roles), Cashier (Login/Logout).
 
@@ -163,8 +163,8 @@ repetitive (template below); the business operations are fully detailed. Example
 |-------|-------------|
 | **Use Case ID** | UC-25 |
 | **Use Case Name** | Add Booking |
-| **Actor(s)** | Cashier (primary), Customer (secondary) |
-| **Description** | Creates a booking for a showtime: selects seats, applies any promotion, takes payment and issues the ticket. |
+| **Actor(s)** | Cashier |
+| **Description** | The cashier creates a booking for a showtime on behalf of a customer: selects seats, applies any promotion, takes payment and issues the ticket. |
 | **Preconditions** | The cashier is logged in; a posted showtime with a free seat exists. |
 | **Postconditions** | A booking, ticket and payment are saved; the seats are marked sold. |
 
