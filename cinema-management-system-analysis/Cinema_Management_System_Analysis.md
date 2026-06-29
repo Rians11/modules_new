@@ -68,7 +68,7 @@ Main objectives:
 | 16 | Search Showtime by Date, Movie, Hall, Time | Cashier |
 | 17 | Add Customer | Cashier |
 | 18 | Update Customer | Cashier |
-| 19 | Delete Customer | Manager |
+| 19 | Delete Customer | Cashier |
 | 20 | Search Customer by Id, Name, Phone | Cashier |
 | 21 | Add Staff | Manager |
 | 22 | Update Staff | Manager |
@@ -84,7 +84,7 @@ Main objectives:
 | 32 | Search Ticket by Code, Showtime, Customer | Cashier |
 | 33 | Add Payment | Cashier |
 | 34 | Update Payment | Cashier |
-| 35 | Delete Payment | Manager |
+| 35 | Delete Payment | Cashier |
 | 36 | Search Payment by Id, Date, Method, Customer | Cashier |
 | 37 | Add Snack | Manager |
 | 38 | Update Snack | Manager |
