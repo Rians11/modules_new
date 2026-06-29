@@ -30,7 +30,7 @@ No,Use Case,Actor
 29,Add Ticket,Cashier
 30,Update Ticket,Cashier
 31,Delete Ticket,Cashier
-32,"Search Ticket by Code, Showtime, Customer","Cashier, Usher"
+32,"Search Ticket by Code, Showtime, Customer",Cashier
 33,Add Payment,Cashier
 34,Update Payment,Cashier
 35,Delete Payment,Manager
@@ -48,11 +48,11 @@ No,Use Case,Actor
 47,Select Seat,"Cashier, Customer (secondary)"
 48,Apply Promotion to Booking,Cashier
 49,Generate Ticket,Cashier
-50,Validate Ticket at Entrance,Usher
+50,Validate Ticket at Entrance,Cashier
 51,Issue Refund,"Cashier, Manager"
 52,Generate Sales Report,Manager
 53,Generate Hall Occupancy Report,Manager
 54,Generate Daily Revenue Report,Manager
 55,Manage User Roles,Manager
-56,Login,"Manager, Cashier, Usher"
-57,Logout,"Manager, Cashier, Usher"
+56,Login,"Manager, Cashier"
+57,Logout,"Manager, Cashier"

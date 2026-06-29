@@ -5,7 +5,7 @@
 
 > This report follows the **same structure as the Student Management System example** given by
 > the lecturer: full CRUD (Add / Update / Delete / Search) for every entity, plus business
-> operations (Post/Unpost, Generate reports, …) and Login/Logout. **57 use cases, 4 actors,
+> operations (Post/Unpost, Generate reports, …) and Login/Logout. **57 use cases, 3 actors,
 > 12 tables.**
 
 ---
@@ -20,9 +20,9 @@ The system is used by the cinema's staff. A **Manager** maintains the reference 
 movies, genres, cinema halls, showtimes, staff, snacks and promotions — publishes the
 showtimes (Post/Unpost), manages user roles and produces reports. A **Cashier** registers
 customers and sells tickets at the box office: creating a booking, selecting seats, applying
-promotions, taking payment and generating the ticket. An **Usher** validates tickets at the
-auditorium entrance. The **Customer** is a secondary actor: they provide their details to
-the cashier and receive the ticket, but do not operate the system.
+promotions, taking payment, generating the ticket and validating tickets at the auditorium
+entrance. The **Customer** is a secondary actor: they provide their details to the cashier
+and receive the ticket, but do not operate the system.
 
 Following the library/student example, every entity supports the four standard operations
 (Add, Update, Delete, Search), and the system adds the cinema-specific business operations
@@ -37,8 +37,7 @@ Main objectives:
 - give management reliable sales, occupancy and revenue reports;
 - secure access through staff accounts and roles.
 
-**Actors:** **Manager** (primary), **Cashier** (primary), **Usher** (primary), **Customer**
-(secondary).
+**Actors:** **Manager** (primary), **Cashier** (primary), **Customer** (secondary).
 
 ---
 
@@ -79,7 +78,7 @@ Main objectives:
 | 29 | Add Ticket | Cashier |
 | 30 | Update Ticket | Cashier |
 | 31 | Delete Ticket | Cashier |
-| 32 | Search Ticket by Code, Showtime, Customer | Cashier, Usher |
+| 32 | Search Ticket by Code, Showtime, Customer | Cashier |
 | 33 | Add Payment | Cashier |
 | 34 | Update Payment | Cashier |
 | 35 | Delete Payment | Manager |
@@ -97,14 +96,14 @@ Main objectives:
 | 47 | Select Seat | Cashier, Customer (secondary) |
 | 48 | Apply Promotion to Booking | Cashier |
 | 49 | Generate Ticket | Cashier |
-| 50 | Validate Ticket at Entrance | Usher |
+| 50 | Validate Ticket at Entrance | Cashier |
 | 51 | Issue Refund | Cashier, Manager |
 | 52 | Generate Sales Report | Manager |
 | 53 | Generate Hall Occupancy Report | Manager |
 | 54 | Generate Daily Revenue Report | Manager |
 | 55 | Manage User Roles | Manager |
-| 56 | Login | Manager, Cashier, Usher |
-| 57 | Logout | Manager, Cashier, Usher |
+| 56 | Login | Manager, Cashier |
+| 57 | Logout | Manager, Cashier |
 
 ---
 
@@ -116,14 +115,13 @@ This is cleaner and easier to mark.
 ### Actors
 - **Manager** — primary (reference data, reports, roles). Generalises the Cashier.
 - **Cashier** — primary (customers, bookings, tickets, payments, snacks at sale).
-- **Usher** — primary (validate tickets).
 - **Customer** — secondary (provides details at booking; does not operate the system).
 
 ### Suggested sub-diagrams (one Use Case Diagram each)
 1. **Movie & Genre Management** — UC 1–8. Actor: Manager.
 2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (+ Cashier for searches).
 3. **Customer & Staff Management** — UC 17–24. Actors: Cashier, Manager.
-4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier, Customer, Usher.
+4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier, Customer.
 5. **Snack & Promotion** — UC 37–44. Actors: Manager, Cashier.
 6. **Reporting & Security** — UC 52–57. Actors: Manager, all (Login/Logout).
 
@@ -181,16 +179,16 @@ repetitive (template below); the business operations are fully detailed. Example
 |-------|-------------|
 | **Use Case ID** | UC-50 |
 | **Use Case Name** | Validate Ticket at Entrance |
-| **Actor(s)** | Usher |
+| **Actor(s)** | Cashier |
 | **Description** | Checks that a presented ticket is valid for the current showtime and marks it used. |
-| **Preconditions** | The usher is logged in; the ticket exists. |
+| **Preconditions** | The cashier is logged in; the ticket exists. |
 | **Postconditions** | The ticket is marked Used; entry is granted or refused. |
 
 **Main Flow**
-1. The usher scans / enters the ticket code.
+1. The cashier scans / enters the ticket code.
 2. The system finds the ticket and its showtime.
 3. The system checks it is valid, for the right showtime and not yet used.
-4. The system marks the ticket Used and shows "Access granted".
+4. The system marks the ticket Used and shows "Access granted" with the seat number.
 
 **Alternative Flows**
 - *3a. Already used / wrong showtime:* show "Invalid ticket" and refuse entry.
@@ -246,7 +244,7 @@ repetitive (template below); the business operations are fully detailed. Example
 - **Cinema Hall:** Hall Name | Type (2D/3D) | Capacity.
 - **Showtime:** Movie (dropdown) | Hall (dropdown) | Date | Time | Ticket Price | Status (Posted).
 - **Customer:** Full Name | Phone | Email.
-- **Staff:** Full Name | Username | Password | Role (Manager/Cashier/Usher).
+- **Staff:** Full Name | Username | Password | Role (Manager/Cashier).
 - **Booking / Seat selection:** Showtime (dropdown) | Seat map | Customer | Promotion code | Total.
 - **Payment:** Amount Due | Method (Card/Mobile/Cash).
 - **Snack:** Name | Category | Price.
@@ -281,7 +279,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | full_name | VARCHAR(100) | |
 | username | VARCHAR(50) | |
 | password | VARCHAR(255) | |
-| role | ENUM('MANAGER','CASHIER','USHER') | |
+| role | ENUM('MANAGER','CASHIER') | |
 
 ### customer
 | Attribute | Data Type | Key |
@@ -387,7 +385,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 - genre 1—* movie 1—* showtime *—1 cinema_hall
 - customer 1—* booking *—1 showtime; promotion 1—* booking
 - booking 1—* ticket; booking 1—* payment; booking 1—* snack_order *—1 snack
-- staff operates the system (Manager / Cashier / Usher roles)
+- staff operates the system (Manager / Cashier roles)
 
 ---
 

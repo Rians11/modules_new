@@ -78,7 +78,7 @@ use_cases = [
     ("Add Ticket", "Cashier"),
     ("Update Ticket", "Cashier"),
     ("Delete Ticket", "Cashier"),
-    ("Search Ticket by Code, Showtime, Customer", "Cashier, Usher"),
+    ("Search Ticket by Code, Showtime, Customer", "Cashier"),
     ("Add Payment", "Cashier"),
     ("Update Payment", "Cashier"),
     ("Delete Payment", "Manager"),
@@ -96,14 +96,14 @@ use_cases = [
     ("Select Seat", "Cashier, Customer (secondary)"),
     ("Apply Promotion to Booking", "Cashier"),
     ("Generate Ticket", "Cashier"),
-    ("Validate Ticket at Entrance", "Usher"),
+    ("Validate Ticket at Entrance", "Cashier"),
     ("Issue Refund", "Cashier, Manager"),
     ("Generate Sales Report", "Manager"),
     ("Generate Hall Occupancy Report", "Manager"),
     ("Generate Daily Revenue Report", "Manager"),
     ("Manage User Roles", "Manager"),
-    ("Login", "Manager, Cashier, Usher"),
-    ("Logout", "Manager, Cashier, Usher"),
+    ("Login", "Manager, Cashier"),
+    ("Logout", "Manager, Cashier"),
 ]
 for i, (uc, actor) in enumerate(use_cases, start=1):
     ws.append([i, uc, actor])
@@ -125,12 +125,12 @@ specs = [
      "4. (optional) Apply a promotion (extend Apply Promotion). 5. Show total and take payment (include "
      "Add Payment). 6. Save booking and issue ticket (include Generate Ticket); mark seats sold.",
      "2a. Seat already sold -> choose another seat. 5a. Payment fails -> release seats, no ticket."),
-    ("UC-50", "Validate Ticket at Entrance", "Usher",
+    ("UC-50", "Validate Ticket at Entrance", "Cashier",
      "Checks a presented ticket is valid for the current showtime and marks it used.",
-     "Usher is logged in; the ticket exists.",
+     "Cashier is logged in; the ticket exists.",
      "Ticket marked Used; entry granted or refused.",
      "1. Scan/enter the ticket code. 2. Find ticket and showtime. 3. Check valid, right showtime, not used. "
-     "4. Mark Used and show 'Access granted'.",
+     "4. Mark Used and show 'Access granted' with the seat number.",
      "3a. Already used / wrong showtime -> 'Invalid ticket', refuse entry."),
     ("UC-52", "Generate Sales Report", "Manager",
      "Produces a report of tickets sold and revenue for a chosen period.",
@@ -181,7 +181,7 @@ ws3 = wb.create_sheet("Database Design")
 tables = {
     "staff": [("staff_id", "INT (auto)", "PK"), ("full_name", "VARCHAR(100)", ""),
               ("username", "VARCHAR(50)", ""), ("password", "VARCHAR(255)", ""),
-              ("role", "ENUM('MANAGER','CASHIER','USHER')", "")],
+              ("role", "ENUM('MANAGER','CASHIER')", "")],
     "customer": [("customer_id", "INT (auto)", "PK"), ("full_name", "VARCHAR(100)", ""),
                  ("phone", "VARCHAR(20)", ""), ("email", "VARCHAR(100)", "")],
     "genre": [("genre_id", "INT (auto)", "PK"), ("name", "VARCHAR(50)", "")],
