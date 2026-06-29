@@ -1,21 +1,58 @@
 No,Use Case,Actor
-1,Login,"Manager, Cashier"
-2,Logout,"Manager, Cashier"
-3,Search / View Movies,Cashier
-4,View Showtimes,Cashier
-5,Sell Ticket,"Cashier (primary), Customer (secondary)"
-6,Select Seat,Cashier
-7,Check Seat Availability,Cashier
-8,Take Payment,Cashier
-9,Cancel Ticket,Cashier
-10,Validate Ticket at Entrance,Cashier
-11,View Sold Tickets,Cashier
-12,Add Movie,Manager
-13,Update Movie,Manager
-14,Delete Movie,Manager
-15,Manage Cinema Halls,Manager
-16,Schedule Showtime,Manager
-17,Update Showtime,Manager
-18,Delete Showtime,Manager
-19,Set Ticket Pricing,Manager
-20,View Sales Report,Manager
+1,Add Movie,Manager
+2,Update Movie,Manager
+3,Delete Movie,Manager
+4,"Search Movie by Title, Genre, Language","Manager, Cashier"
+5,Add Genre,Manager
+6,Update Genre,Manager
+7,Delete Genre,Manager
+8,Search Genre by Name,Manager
+9,Add Cinema Hall,Manager
+10,Update Cinema Hall,Manager
+11,Delete Cinema Hall,Manager
+12,"Search Cinema Hall by Name, Type, Capacity",Manager
+13,Add Showtime,Manager
+14,Update Showtime,Manager
+15,Delete Showtime,Manager
+16,"Search Showtime by Date, Movie, Hall, Time","Manager, Cashier"
+17,Add Customer,Cashier
+18,Update Customer,Cashier
+19,Delete Customer,Manager
+20,"Search Customer by Id, Name, Phone",Cashier
+21,Add Staff,Manager
+22,Update Staff,Manager
+23,Delete Staff,Manager
+24,"Search Staff by Id, Name, Role",Manager
+25,Add Booking,"Cashier, Customer (secondary)"
+26,Update Booking,Cashier
+27,Delete Booking,Cashier
+28,"Search Booking by Id, Customer, Date, Showtime","Cashier, Manager"
+29,Add Ticket,Cashier
+30,Update Ticket,Cashier
+31,Delete Ticket,Cashier
+32,"Search Ticket by Code, Showtime, Customer","Cashier, Usher"
+33,Add Payment,Cashier
+34,Update Payment,Cashier
+35,Delete Payment,Manager
+36,"Search Payment by Id, Date, Method, Customer","Cashier, Manager"
+37,Add Snack,Manager
+38,Update Snack,Manager
+39,Delete Snack,Manager
+40,"Search Snack by Name, Category","Cashier, Manager"
+41,Add Promotion,Manager
+42,Update Promotion,Manager
+43,Delete Promotion,Manager
+44,"Search Promotion by Code, Period","Cashier, Manager"
+45,Post Showtime,Manager
+46,Unpost Showtime,Manager
+47,Select Seat,"Cashier, Customer (secondary)"
+48,Apply Promotion to Booking,Cashier
+49,Generate Ticket,Cashier
+50,Validate Ticket at Entrance,Usher
+51,Issue Refund,"Cashier, Manager"
+52,Generate Sales Report,Manager
+53,Generate Hall Occupancy Report,Manager
+54,Generate Daily Revenue Report,Manager
+55,Manage User Roles,Manager
+56,Login,"Manager, Cashier, Usher"
+57,Logout,"Manager, Cashier, Usher"
