@@ -289,7 +289,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | full_name | VARCHAR(100) | |
 | username | VARCHAR(50) | |
 | password | VARCHAR(255) | |
-| role | ENUM('MANAGER','CASHIER') | |
+| role | VARCHAR(10) | Manager / Cashier |
 
 ### customer
 | Attribute | Data Type | Key |
@@ -332,7 +332,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | show_date | DATE | |
 | show_time | TIME | |
 | ticket_price | DECIMAL(8,2) | |
-| status | ENUM('Posted','Unposted') | |
+| status | VARCHAR(10) | Posted / Unposted |
 
 ### booking
 | Attribute | Data Type | Key |
@@ -342,7 +342,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | show_id | INT | FK → showtime |
 | promotion_id | INT | FK → promotion (nullable) |
 | booking_datetime | DATETIME | |
-| status | ENUM('Confirmed','Cancelled') | |
+| status | VARCHAR(10) | Confirmed / Cancelled |
 | total_amount | DECIMAL(8,2) | |
 
 ### ticket
@@ -352,7 +352,7 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | booking_id | INT | FK → booking |
 | seat_number | VARCHAR(8) | |
 | price | DECIMAL(8,2) | |
-| status | ENUM('Valid','Used','Refunded') | |
+| status | VARCHAR(10) | Valid / Used / Refunded |
 
 ### payment
 | Attribute | Data Type | Key |
@@ -360,9 +360,9 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 | payment_id | INT | PK |
 | booking_id | INT | FK → booking |
 | amount | DECIMAL(8,2) | |
-| method | ENUM('Card','Mobile','Cash') | |
+| method | VARCHAR(10) | Card / Mobile / Cash |
 | payment_datetime | DATETIME | |
-| status | ENUM('Paid','Refunded') | |
+| status | VARCHAR(10) | Paid / Refunded |
 
 ### snack
 | Attribute | Data Type | Key |
