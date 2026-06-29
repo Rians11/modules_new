@@ -93,7 +93,7 @@ use_cases = [
     ("Search Promotion by Code, Period", "Cashier"),
     ("Post Showtime", "Manager"),
     ("Unpost Showtime", "Manager"),
-    ("Select Seat", "Cashier (primary), Customer (secondary)"),
+    ("Select Seat", "Cashier"),
     ("Apply Promotion to Booking", "Cashier"),
     ("Generate Ticket", "Cashier"),
     ("Validate Ticket at Entrance", "Cashier"),

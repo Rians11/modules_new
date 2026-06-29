@@ -45,7 +45,7 @@ No,Use Case,Actor
 44,"Search Promotion by Code, Period",Cashier
 45,Post Showtime,Manager
 46,Unpost Showtime,Manager
-47,Select Seat,"Cashier (primary), Customer (secondary)"
+47,Select Seat,Cashier
 48,Apply Promotion to Booking,Cashier
 49,Generate Ticket,Cashier
 50,Validate Ticket at Entrance,Cashier

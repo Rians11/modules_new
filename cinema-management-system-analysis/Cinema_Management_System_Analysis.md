@@ -96,7 +96,7 @@ Main objectives:
 | 44 | Search Promotion by Code, Period | Cashier |
 | 45 | Post Showtime | Manager |
 | 46 | Unpost Showtime | Manager |
-| 47 | Select Seat | Cashier (primary), Customer (secondary) |
+| 47 | Select Seat | Cashier |
 | 48 | Apply Promotion to Booking | Cashier |
 | 49 | Generate Ticket | Cashier |
 | 50 | Validate Ticket at Entrance | Cashier |
@@ -129,7 +129,9 @@ This is cleaner and easier to mark.
 1. **Movie & Genre Management** — UC 1–8. Actors: Manager (UC 4 → Cashier).
 2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (UC 16 → Cashier).
 3. **Customer & Staff Management** — UC 17–24. Actors: Cashier (customers), Manager (staff).
-4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier, Customer (secondary).
+4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier (all), Customer
+   (secondary, linked **only** to `Add Booking` — the seat/payment/ticket steps are reached
+   through the `<<include>>` relationships).
 5. **Snack & Promotion** — UC 37–44. Actors: Manager (CRUD), Cashier (searches, Apply Promotion).
 6. **Reporting & Security** — UC 52–56. Actors: Manager (reports, roles), Cashier (Login/Logout).
 
