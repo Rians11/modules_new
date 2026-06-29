@@ -47,12 +47,12 @@ ws.append(["No", "Use Case", "Actor"])
 style_header(ws, 2, 3)
 
 use_cases = [
-    ("Login", "Administrator"),
-    ("Logout", "Administrator"),
+    ("Login", "Administrator, Cashier"),
+    ("Logout", "Administrator, Cashier"),
     ("Add Movie", "Administrator"),
     ("Update Movie", "Administrator"),
     ("Delete Movie", "Administrator"),
-    ("View / Search Movies", "Administrator"),
+    ("View / Search Movies", "Cashier"),
     ("Add Cinema Hall", "Administrator"),
     ("Update Cinema Hall", "Administrator"),
     ("Delete Cinema Hall", "Administrator"),
@@ -60,16 +60,16 @@ use_cases = [
     ("Add Movie Show", "Administrator"),
     ("Update Movie Show", "Administrator"),
     ("Delete Movie Show", "Administrator"),
-    ("View Movie Shows", "Administrator"),
+    ("View Movie Shows", "Cashier"),
     ("Update Ticket Pricing (Weekday/Weekend - Adult/Kid)", "Administrator"),
-    ("View Ticket Pricing", "Administrator"),
-    ("Book Ticket (Sell Ticket)", "Administrator (primary), Customer (secondary)"),
-    ("Select Seat", "Administrator"),
-    ("Check Seat Availability", "Administrator"),
-    ("Calculate Ticket Price", "Administrator"),
-    ("View Sold Tickets", "Administrator"),
-    ("Update Ticket", "Administrator"),
-    ("Cancel / Delete Ticket", "Administrator"),
+    ("View Ticket Pricing", "Cashier"),
+    ("Book Ticket (Sell Ticket)", "Cashier (primary), Customer (secondary)"),
+    ("Select Seat", "Cashier"),
+    ("Check Seat Availability", "Cashier"),
+    ("Calculate Ticket Price", "Cashier"),
+    ("View Sold Tickets", "Cashier"),
+    ("Update Ticket", "Cashier"),
+    ("Cancel / Delete Ticket", "Cashier"),
 ]
 for i, (uc, actor) in enumerate(use_cases, start=1):
     ws.append([i, uc, actor])
@@ -83,7 +83,7 @@ ws.freeze_panes = "A3"
 # ---- Sheet 2 : Use Case Specifications -------------------------------------
 ws2 = wb.create_sheet("Use Case Specifications")
 specs = [
-    ("UC-17", "Book Ticket (Sell Ticket)", "Administrator (primary), Customer (secondary)",
+    ("UC-17", "Book Ticket (Sell Ticket)", "Cashier (primary), Customer (secondary)",
      "Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable. The customer provides details and receives the ticket.",
      "Administrator is logged in; a show with a free seat exists; pricing is configured.",
      "A ticket record is saved; the chosen seat becomes unavailable.",
@@ -92,11 +92,12 @@ specs = [
      "5. System calculates price from pricing rules (include Calculate Ticket Price). "
      "6. Confirm; save ticket and mark seat sold. 7. Show confirmation.",
      "3a. Seat already sold -> ask for another seat. 4a. Invalid/missing input -> validation error, not saved."),
-    ("UC-01", "Login", "Administrator",
-     "Authenticates the administrator before granting access to the dashboard.",
-     "Application running; a valid admin account exists.",
-     "Administrator authenticated; dashboard opens.",
-     "1. Enter username and password. 2. System validates against the database. 3. On success, dashboard opens.",
+    ("UC-01", "Login", "Administrator, Cashier",
+     "Authenticates the user and opens the dashboard according to the role (ADMIN or CASHIER).",
+     "Application running; a valid account exists in the users table.",
+     "User authenticated; dashboard opens with role-based access.",
+     "1. Enter username and password. 2. System validates against the users table and reads the role. "
+     "3. On success, dashboard opens (full menu for ADMIN, ticket menu for CASHIER).",
      "2a. Invalid credentials -> show 'Invalid login credentials', stay on login screen."),
     ("UC-15", "Update Ticket Pricing", "Administrator",
      "Updates ticket prices that vary by day type (weekday/weekend) and category (adult/kid), without changing code.",
@@ -143,21 +144,29 @@ ws2.merge_cells(start_row=r + 1, start_column=1, end_row=r + 1, end_column=2)
 # ---- Sheet 3 : Database Design ---------------------------------------------
 ws3 = wb.create_sheet("Database Design")
 tables = {
-    "admin_user": [("user_id", "INT (auto)", "PK"), ("username", "VARCHAR(50)", ""),
-                   ("password", "VARCHAR(255)", "")],
-    "movie": [("movie_id", "INT (auto)", "PK"), ("title", "VARCHAR(150)", ""),
-              ("genre", "VARCHAR(50)", ""), ("duration_min", "INT", "")],
-    "cinema_hall": [("hall_id", "INT (auto)", "PK"), ("hall_name", "VARCHAR(50)", ""),
-                    ("seating_capacity", "INT", "")],
-    "movie_show": [("show_id", "INT (auto)", "PK"), ("movie_id", "INT", "FK -> movie"),
-                   ("hall_id", "INT", "FK -> cinema_hall"), ("show_date", "DATE", ""),
-                   ("show_time", "TIME", "")],
-    "pricing": [("pricing_id", "INT (auto)", "PK"), ("day_type", "VARCHAR(10)", "Weekday/Weekend"),
-                ("category", "VARCHAR(10)", "Adult/Kid"), ("price", "DECIMAL(8,2)", "")],
-    "ticket": [("ticket_id", "INT (auto)", "PK"), ("show_id", "INT", "FK -> movie_show"),
-               ("seat_number", "VARCHAR(10)", ""), ("ticket_type", "VARCHAR(10)", "Adult/Kid"),
-               ("price", "DECIMAL(8,2)", ""), ("customer_name", "VARCHAR(100)", ""),
-               ("purchase_date", "DATETIME", "")],
+    "users": [("user_id", "INT(11)", "PK"), ("username", "VARCHAR(50)", "UQ"),
+              ("password", "VARCHAR(100)", ""),
+              ("role", "ENUM('ADMIN','CASHIER')", "default 'CASHIER'")],
+    "customer": [("customer_id", "INT(11)", "PK"), ("full_name", "VARCHAR(100)", ""),
+                 ("phone", "VARCHAR(20)", "")],
+    "movie": [("movie_id", "INT(11)", "PK"), ("title", "VARCHAR(120)", "UQ"),
+              ("genre", "VARCHAR(50)", ""), ("duration", "INT(11)", "")],
+    "cinema_hall": [("hall_id", "INT(11)", "PK"), ("hall_name", "VARCHAR(60)", "UQ"),
+                    ("capacity", "INT(11)", "")],
+    "movie_show": [("show_id", "INT(11)", "PK"), ("movie_id", "INT(11)", "FK -> movie"),
+                   ("hall_id", "INT(11)", "FK -> cinema_hall"), ("show_date", "DATE", ""),
+                   ("show_time", "TIME", "UQ(hall_id,date,time)")],
+    "pricing_config": [("id", "INT(11)", "PK"), ("weekday_adult", "INT(11)", ""),
+                       ("weekday_kid", "INT(11)", ""), ("weekend_adult", "INT(11)", ""),
+                       ("weekend_kid", "INT(11)", ""),
+                       ("updated_at", "TIMESTAMP", "default CURRENT_TIMESTAMP")],
+    "ticket": [("ticket_id", "INT(11)", "PK"), ("show_id", "INT(11)", "FK -> movie_show"),
+               ("seat_number", "INT(11)", "UQ(show_id,seat)"),
+               ("customer_id", "INT(11)", "FK -> customer"),
+               ("ticket_type", "ENUM('Adult','Kid')", ""), ("price", "DECIMAL(10,2)", ""),
+               ("purchase_date", "TIMESTAMP", "default CURRENT_TIMESTAMP")],
+    "show_details": [("details_id", "INT(11)", "PK"), ("show_id", "INT(11)", "UQ -> movie_show"),
+                     ("movie_name", "VARCHAR(120)", ""), ("hall_name", "VARCHAR(60)", "")],
 }
 r = 1
 for tname, cols in tables.items():

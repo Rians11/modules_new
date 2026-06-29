@@ -1,10 +1,10 @@
 No,Use Case,Actor
-1,Login,Administrator
-2,Logout,Administrator
+1,Login,"Administrator, Cashier"
+2,Logout,"Administrator, Cashier"
 3,Add Movie,Administrator
 4,Update Movie,Administrator
 5,Delete Movie,Administrator
-6,View / Search Movies,Administrator
+6,View / Search Movies,Cashier
 7,Add Cinema Hall,Administrator
 8,Update Cinema Hall,Administrator
 9,Delete Cinema Hall,Administrator
@@ -12,13 +12,13 @@ No,Use Case,Actor
 11,Add Movie Show,Administrator
 12,Update Movie Show,Administrator
 13,Delete Movie Show,Administrator
-14,View Movie Shows,Administrator
+14,View Movie Shows,Cashier
 15,Update Ticket Pricing (Weekday/Weekend - Adult/Kid),Administrator
-16,View Ticket Pricing,Administrator
-17,Book Ticket (Sell Ticket),"Administrator (primary), Customer (secondary)"
-18,Select Seat,Administrator
-19,Check Seat Availability,Administrator
-20,Calculate Ticket Price,Administrator
-21,View Sold Tickets,Administrator
-22,Update Ticket,Administrator
-23,Cancel / Delete Ticket,Administrator
+16,View Ticket Pricing,Cashier
+17,Book Ticket (Sell Ticket),"Cashier (primary), Customer (secondary)"
+18,Select Seat,Cashier
+19,Check Seat Availability,Cashier
+20,Calculate Ticket Price,Cashier
+21,View Sold Tickets,Cashier
+22,Update Ticket,Cashier
+23,Cancel / Delete Ticket,Cashier

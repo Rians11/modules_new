@@ -33,9 +33,14 @@ The main objectives of the system are to:
 - keep reliable records of movies, halls, shows and sold tickets (full CRUD);
 - secure access through administrator authentication.
 
-**Actors:** **Administrator** — the *primary* actor who logs in and operates every
-function of the system. **Customer** — a *secondary* actor who does not log in but takes
-part in the ticket booking (provides personal details and receives the ticket).
+**Actors** (the `users` table defines a `role` of either ADMIN or CASHIER, so the system
+has two operator roles plus the customer):
+
+- **Administrator (Admin)** — *primary* actor with full access: manages movies, halls,
+  shows and pricing, and can also perform every cashier task.
+- **Cashier** — *primary* actor who logs in to sell tickets and manage ticket records.
+- **Customer** — *secondary* actor who does not log in but takes part in ticket booking
+  (provides name/phone, stored in the `customer` table, and receives the ticket).
 
 ---
 
@@ -44,14 +49,17 @@ part in the ticket booking (provides personal details and receives the ticket).
 > Also provided in `cinema_use_cases.csv` / `Cinema_Management_System.xlsx` (open in Excel,
 > export to PDF as the assignment requires).
 
+> Note: thanks to the **Administrator ▷ Cashier generalization** (see §3), the Admin can
+> also perform every Cashier use case. The table lists the most specific role for each.
+
 | No | Use Case | Actor |
 |----|----------|-------|
-| 1 | Login | Administrator |
-| 2 | Logout | Administrator |
+| 1 | Login | Administrator, Cashier |
+| 2 | Logout | Administrator, Cashier |
 | 3 | Add Movie | Administrator |
 | 4 | Update Movie | Administrator |
 | 5 | Delete Movie | Administrator |
-| 6 | View / Search Movies | Administrator |
+| 6 | View / Search Movies | Cashier |
 | 7 | Add Cinema Hall | Administrator |
 | 8 | Update Cinema Hall | Administrator |
 | 9 | Delete Cinema Hall | Administrator |
@@ -59,28 +67,32 @@ part in the ticket booking (provides personal details and receives the ticket).
 | 11 | Add Movie Show | Administrator |
 | 12 | Update Movie Show | Administrator |
 | 13 | Delete Movie Show | Administrator |
-| 14 | View Movie Shows | Administrator |
+| 14 | View Movie Shows | Cashier |
 | 15 | Update Ticket Pricing (Weekday/Weekend – Adult/Kid) | Administrator |
-| 16 | View Ticket Pricing | Administrator |
-| 17 | Book Ticket (Sell Ticket) | Administrator (primary), Customer (secondary) |
-| 18 | Select Seat | Administrator |
-| 19 | Check Seat Availability | Administrator |
-| 20 | Calculate Ticket Price | Administrator |
-| 21 | View Sold Tickets | Administrator |
-| 22 | Update Ticket | Administrator |
-| 23 | Cancel / Delete Ticket | Administrator |
+| 16 | View Ticket Pricing | Cashier |
+| 17 | Book Ticket (Sell Ticket) | Cashier (primary), Customer (secondary) |
+| 18 | Select Seat | Cashier |
+| 19 | Check Seat Availability | Cashier |
+| 20 | Calculate Ticket Price | Cashier |
+| 21 | View Sold Tickets | Cashier |
+| 22 | Update Ticket | Cashier |
+| 23 | Cancel / Delete Ticket | Cashier |
 
 ---
 
 ## 3. Use Case Diagram — to draw in StarUML (25 marks)
 
-Because the system has a single actor and ~23 use cases, **one single diagram is enough**
-(clean and readable). Structure to reproduce in StarUML:
+One single diagram is enough (~23 use cases). Structure to reproduce in StarUML:
 
 ### Actors
-- **Administrator** — *primary* actor, one stick figure on the **left**. Connected to every use case.
-- **Customer** — *secondary* actor, one stick figure on the **right**. Connected **only** to
-  `Book Ticket` (the customer provides details and receives the ticket but never logs in).
+- **Cashier** — *primary* actor, stick figure on the **left**. Connected to Login, Logout,
+  View Movies, View Shows, View Pricing, and all the ticket use cases (Book Ticket, View
+  Sold Tickets, Update Ticket, Cancel Ticket).
+- **Administrator** — *primary* actor, stick figure on the **left**, **above** the Cashier.
+  Connected to the management use cases (Add/Update/Delete Movie, Hall, Show; Update Pricing;
+  View Halls).
+- **Customer** — *secondary* actor, stick figure on the **right**. Connected **only** to
+  `Book Ticket`.
 
 ### Use cases (ovals) — group them visually by area
 - **Authentication:** Login, Logout
@@ -92,22 +104,22 @@ Because the system has a single actor and ~23 use cases, **one single diagram is
   plus the sub-behaviours Select Seat, Check Seat Availability, Calculate Ticket Price.
 
 ### Associations
-- Connect **Administrator** to every use case with a plain line (Association).
-- Connect **Customer** to `Book Ticket` only (plain line). This shows Customer as a
-  secondary actor participating in that single use case.
+- Connect each actor to its use cases with a plain line (Association), as listed above.
+- Connect **Customer** to `Book Ticket` only — secondary actor on that single use case.
 
 ### Relationships that earn the marks (very important)
+- **Generalization** (solid line, hollow triangle ▷): **Administrator ▷ Cashier**. This means
+  the Admin inherits every Cashier use case (so you do NOT need to also link the Admin to the
+  ticket use cases — the generalization covers it). Justified by `users.role ENUM(ADMIN, CASHIER)`.
 - **`<<include>>`** (dashed arrow, base → included). *Book Ticket* must include:
   - `Book Ticket` ──▷ `Select Seat`
   - `Book Ticket` ──▷ `Check Seat Availability`
   - `Book Ticket` ──▷ `Calculate Ticket Price`
-- **`<<extend>>`** (dashed arrow, extension → base):
-  - `Calculate Ticket Price` reads pricing → you may show `Update Ticket Pricing` affects it,
-    but keep extend simple; optionally `Cancel / Delete Ticket` can be shown without extend.
 
 > StarUML steps: `Model → Add Diagram → Use Case Diagram`. Use the **Actor** and **UseCase**
-> tools, link with **Association**, and use the **Include** tool for the three dashed
-> `<<include>>` arrows from *Book Ticket*. Export: `File → Export Diagram As → PNG`.
+> tools, link with **Association**, use **Generalization** from Administrator to Cashier, and
+> the **Include** tool for the three dashed `<<include>>` arrows from *Book Ticket*.
+> Export: `File → Export Diagram As → PNG`.
 
 ---
 
@@ -121,7 +133,7 @@ Full specifications for the key use cases. Replicate the short CRUD template for
 |-------|-------------|
 | **Use Case ID** | UC-17 |
 | **Use Case Name** | Book Ticket |
-| **Actor(s)** | Administrator (primary), Customer (secondary) |
+| **Actor(s)** | Cashier (primary), Customer (secondary) |
 | **Description** | Sells a ticket for a chosen show and seat, calculates the price automatically and marks the seat as unavailable. The customer provides their details and receives the ticket. |
 | **Preconditions** | The administrator is logged in; at least one show with a free seat exists; pricing is configured. |
 | **Postconditions** | A ticket record is saved; the chosen seat becomes unavailable. |
@@ -149,15 +161,15 @@ Full specifications for the key use cases. Replicate the short CRUD template for
 |-------|-------------|
 | **Use Case ID** | UC-01 |
 | **Use Case Name** | Login |
-| **Actor(s)** | Administrator |
-| **Description** | Authenticates the administrator before granting access to the dashboard. |
-| **Preconditions** | The application is running; a valid admin account exists. |
-| **Postconditions** | The administrator is authenticated and the dashboard opens. |
+| **Actor(s)** | Administrator, Cashier |
+| **Description** | Authenticates the user and opens the dashboard according to their role (ADMIN or CASHIER). |
+| **Preconditions** | The application is running; a valid user account exists in the `users` table. |
+| **Postconditions** | The user is authenticated and the dashboard opens with role-based access. |
 
 **Main Flow**
-1. The administrator enters username and password.
-2. The system validates the credentials against the database.
-3. On success, the admin dashboard opens.
+1. The user enters username and password.
+2. The system validates the credentials against the `users` table and reads the role.
+3. On success, the dashboard opens (full menu for ADMIN, ticket menu for CASHIER).
 
 **Alternative Flows**
 - *2a. Invalid credentials:* the system shows "Invalid login credentials" and stays on the login screen.
@@ -208,7 +220,7 @@ Full specifications for the key use cases. Replicate the short CRUD template for
 
 > Hand sketches are enough. Field list per screen so your sketches match the real frames.
 
-**F1 — Login (LoginFrame).** Username | Password → Buttons: *Login*.
+**F1 — Login (LoginFrame).** Username | Password → Button: *Login*. (The role ADMIN/CASHIER is read from the `users` table.)
 
 **F2 — Movie Management (MovieManagementFrame).** Title | Genre | Duration (min) →
 *Add*, *Update*, *Delete*, *Clear*; plus a table listing movies.
@@ -220,7 +232,7 @@ Full specifications for the key use cases. Replicate the short CRUD template for
 Date | Time → *Add*, *Update*, *Delete*; plus a table listing shows.
 
 **F5 — Ticket Booking (TicketBookingFrame).** Show (dropdown) | Seat number (selection) |
-Customer Name | Ticket Type (Adult/Kid) | Price (auto, read-only) → *Book / Sell*.
+Customer Full Name | Customer Phone | Ticket Type (Adult/Kid) | Price (auto, read-only) → *Book / Sell*.
 
 **F6 — Pricing Management (PricingManagementFrame).** Weekday Adult | Weekday Kid |
 Weekend Adult | Weekend Kid → *Save*.
@@ -246,63 +258,87 @@ Weekend Adult | Weekend Kid → *Save*.
 
 ## 7. Database Design (Tables, Attributes, Data Types) (15 marks)
 
-> PK = Primary Key, FK = Foreign Key. Matches the Movie / CinemaHall / MovieShow / Ticket /
-> Pricing classes and the admin login.
+> PK = Primary Key, FK = Foreign Key, UQ = Unique. This matches exactly the `cinema_db`
+> database (phpMyAdmin export).
 
-### admin_user
+### users
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| user_id | INT (auto) | PK |
-| username | VARCHAR(50) | |
-| password | VARCHAR(255) | |
+| user_id | INT(11) | PK |
+| username | VARCHAR(50) | UQ |
+| password | VARCHAR(100) | |
+| role | ENUM('ADMIN','CASHIER') | default 'CASHIER' |
+
+### customer
+| Attribute | Data Type | Key |
+|-----------|-----------|-----|
+| customer_id | INT(11) | PK |
+| full_name | VARCHAR(100) | |
+| phone | VARCHAR(20) | |
 
 ### movie
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| movie_id | INT (auto) | PK |
-| title | VARCHAR(150) | |
+| movie_id | INT(11) | PK |
+| title | VARCHAR(120) | UQ |
 | genre | VARCHAR(50) | |
-| duration_min | INT | |
+| duration | INT(11) | |
 
 ### cinema_hall
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| hall_id | INT (auto) | PK |
-| hall_name | VARCHAR(50) | |
-| seating_capacity | INT | |
+| hall_id | INT(11) | PK |
+| hall_name | VARCHAR(60) | UQ |
+| capacity | INT(11) | |
 
 ### movie_show
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| show_id | INT (auto) | PK |
-| movie_id | INT | FK → movie |
-| hall_id | INT | FK → cinema_hall |
+| show_id | INT(11) | PK |
+| movie_id | INT(11) | FK → movie |
+| hall_id | INT(11) | FK → cinema_hall |
 | show_date | DATE | |
 | show_time | TIME | |
 
-### pricing
+*UQ (hall_id, show_date, show_time) — prevents scheduling two shows in the same hall at the same time.*
+
+### pricing_config
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| pricing_id | INT (auto) | PK |
-| day_type | VARCHAR(10) | Weekday / Weekend |
-| category | VARCHAR(10) | Adult / Kid |
-| price | DECIMAL(8,2) | |
+| id | INT(11) | PK |
+| weekday_adult | INT(11) | |
+| weekday_kid | INT(11) | |
+| weekend_adult | INT(11) | |
+| weekend_kid | INT(11) | |
+| updated_at | TIMESTAMP | default CURRENT_TIMESTAMP |
 
 ### ticket
 | Attribute | Data Type | Key |
 |-----------|-----------|-----|
-| ticket_id | INT (auto) | PK |
-| show_id | INT | FK → movie_show |
-| seat_number | VARCHAR(10) | |
-| ticket_type | VARCHAR(10) | Adult / Kid |
-| price | DECIMAL(8,2) | |
-| customer_name | VARCHAR(100) | |
-| purchase_date | DATETIME | |
+| ticket_id | INT(11) | PK |
+| show_id | INT(11) | FK → movie_show |
+| seat_number | INT(11) | |
+| customer_id | INT(11) | FK → customer |
+| ticket_type | ENUM('Adult','Kid') | |
+| price | DECIMAL(10,2) | |
+| purchase_date | TIMESTAMP | default CURRENT_TIMESTAMP |
+
+*UQ (show_id, seat_number) — enforces seat locking: a seat can be sold only once per show.*
+
+### show_details
+| Attribute | Data Type | Key |
+|-----------|-----------|-----|
+| details_id | INT(11) | PK |
+| show_id | INT(11) | UQ → movie_show |
+| movie_name | VARCHAR(120) | |
+| hall_name | VARCHAR(60) | |
 
 ### Relationships summary
 - movie 1—* movie_show *—1 cinema_hall  (a show links one movie and one hall)
-- movie_show 1—* ticket  (a show has many tickets; a seat per show is unique → seat locking)
-- pricing supplies the price used when a ticket is created (by day_type + category)
+- movie_show 1—* ticket  (unique seat per show → seat locking via UQ (show_id, seat_number))
+- customer 1—* ticket  (a ticket belongs to one customer)
+- pricing_config holds one row with the four prices used when a ticket is created
+- show_details holds 1—1 denormalised display info per movie_show
 
 ---
 
