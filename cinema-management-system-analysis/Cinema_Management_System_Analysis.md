@@ -5,8 +5,9 @@
 
 > This report follows the **same structure as the Student Management System example** given by
 > the lecturer: full CRUD (Add / Update / Delete / Search) for every entity, plus business
-> operations (Post/Unpost, Generate reports, …) and Login/Logout. **57 use cases, 3 actors,
-> 12 tables.**
+> operations (Post/Unpost, Generate reports, …) and Login/Logout. **56 use cases, 3 actors,
+> 12 tables.** Each use case has a single primary actor; the **Manager ▷ Cashier**
+> generalization means the Manager also performs every Cashier use case.
 
 ---
 
@@ -34,7 +35,7 @@ Main objectives:
 - maintain complete reference data with full CRUD on every entity;
 - sell tickets while preventing double-booking of seats;
 - take payment, apply promotions and issue tickets;
-- give management reliable sales, occupancy and revenue reports;
+- give management reliable sales and occupancy reports;
 - secure access through staff accounts and roles.
 
 **Actors:** **Manager** (primary), **Cashier** (primary), **Customer** (secondary).
@@ -44,13 +45,15 @@ Main objectives:
 ## 2. List of Features (Use Cases) — table (5 marks)
 
 > Also in `cinema_use_cases.csv` / `Cinema_Management_System.xlsx` (open in Excel, export to PDF).
+> Each use case has **one primary actor**. Because of the **Manager ▷ Cashier** generalization
+> (§3), the Manager can also perform every Cashier use case without extra lines on the diagram.
 
 | No | Use Case | Actor |
 |----|----------|-------|
 | 1 | Add Movie | Manager |
 | 2 | Update Movie | Manager |
 | 3 | Delete Movie | Manager |
-| 4 | Search Movie by Title, Genre, Language | Manager, Cashier |
+| 4 | Search Movie by Title, Genre, Language | Cashier |
 | 5 | Add Genre | Manager |
 | 6 | Update Genre | Manager |
 | 7 | Delete Genre | Manager |
@@ -62,7 +65,7 @@ Main objectives:
 | 13 | Add Showtime | Manager |
 | 14 | Update Showtime | Manager |
 | 15 | Delete Showtime | Manager |
-| 16 | Search Showtime by Date, Movie, Hall, Time | Manager, Cashier |
+| 16 | Search Showtime by Date, Movie, Hall, Time | Cashier |
 | 17 | Add Customer | Cashier |
 | 18 | Update Customer | Cashier |
 | 19 | Delete Customer | Manager |
@@ -71,10 +74,10 @@ Main objectives:
 | 22 | Update Staff | Manager |
 | 23 | Delete Staff | Manager |
 | 24 | Search Staff by Id, Name, Role | Manager |
-| 25 | Add Booking | Cashier, Customer (secondary) |
+| 25 | Add Booking | Cashier (primary), Customer (secondary) |
 | 26 | Update Booking | Cashier |
 | 27 | Delete Booking | Cashier |
-| 28 | Search Booking by Id, Customer, Date, Showtime | Cashier, Manager |
+| 28 | Search Booking by Id, Customer, Date, Showtime | Cashier |
 | 29 | Add Ticket | Cashier |
 | 30 | Update Ticket | Cashier |
 | 31 | Delete Ticket | Cashier |
@@ -82,52 +85,56 @@ Main objectives:
 | 33 | Add Payment | Cashier |
 | 34 | Update Payment | Cashier |
 | 35 | Delete Payment | Manager |
-| 36 | Search Payment by Id, Date, Method, Customer | Cashier, Manager |
+| 36 | Search Payment by Id, Date, Method, Customer | Cashier |
 | 37 | Add Snack | Manager |
 | 38 | Update Snack | Manager |
 | 39 | Delete Snack | Manager |
-| 40 | Search Snack by Name, Category | Cashier, Manager |
+| 40 | Search Snack by Name, Category | Cashier |
 | 41 | Add Promotion | Manager |
 | 42 | Update Promotion | Manager |
 | 43 | Delete Promotion | Manager |
-| 44 | Search Promotion by Code, Period | Cashier, Manager |
+| 44 | Search Promotion by Code, Period | Cashier |
 | 45 | Post Showtime | Manager |
 | 46 | Unpost Showtime | Manager |
-| 47 | Select Seat | Cashier, Customer (secondary) |
+| 47 | Select Seat | Cashier (primary), Customer (secondary) |
 | 48 | Apply Promotion to Booking | Cashier |
 | 49 | Generate Ticket | Cashier |
 | 50 | Validate Ticket at Entrance | Cashier |
-| 51 | Issue Refund | Cashier, Manager |
+| 51 | Issue Refund | Cashier |
 | 52 | Generate Sales Report | Manager |
 | 53 | Generate Hall Occupancy Report | Manager |
-| 54 | Generate Daily Revenue Report | Manager |
-| 55 | Manage User Roles | Manager |
-| 56 | Login | Manager, Cashier |
-| 57 | Logout | Manager, Cashier |
+| 54 | Manage User Roles | Manager |
+| 55 | Login | Cashier |
+| 56 | Logout | Cashier |
 
 ---
 
 ## 3. Use Case Diagram(s) — to draw in StarUML (25 marks)
 
-With 57 use cases, draw **one diagram per subsystem** (the example also allows "diagram(s)").
+With 56 use cases, draw **one diagram per subsystem** (the example also allows "diagram(s)").
 This is cleaner and easier to mark.
 
 ### Actors
-- **Manager** — primary (reference data, reports, roles). Generalises the Cashier.
-- **Cashier** — primary (customers, bookings, tickets, payments, snacks at sale).
+- **Manager** — primary (reference data, reports, roles). **Generalises the Cashier** (▷), so
+  the Manager also performs every Cashier use case automatically.
+- **Cashier** — primary (operational: customers, bookings, tickets, payments, sales searches,
+  ticket validation, login).
 - **Customer** — secondary (provides details at booking; does not operate the system).
 
+> Rule used: each use case is linked to **one** actor only. Operational use cases → Cashier;
+> management use cases → Manager. Do **not** draw a Manager line on Cashier use cases — the
+> generalization already covers them (drawing both would be redundant).
+
 ### Suggested sub-diagrams (one Use Case Diagram each)
-1. **Movie & Genre Management** — UC 1–8. Actor: Manager.
-2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (+ Cashier for searches).
-3. **Customer & Staff Management** — UC 17–24. Actors: Cashier, Manager.
-4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier, Customer.
-5. **Snack & Promotion** — UC 37–44. Actors: Manager, Cashier.
-6. **Reporting & Security** — UC 52–57. Actors: Manager, all (Login/Logout).
+1. **Movie & Genre Management** — UC 1–8. Actors: Manager (UC 4 → Cashier).
+2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (UC 16 → Cashier).
+3. **Customer & Staff Management** — UC 17–24. Actors: Cashier (customers), Manager (staff).
+4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actors: Cashier, Customer (secondary).
+5. **Snack & Promotion** — UC 37–44. Actors: Manager (CRUD), Cashier (searches, Apply Promotion).
+6. **Reporting & Security** — UC 52–56. Actors: Manager (reports, roles), Cashier (Login/Logout).
 
 ### Relationships that earn the marks (very important)
-- **Generalization** (▷ solid, hollow triangle): **Manager ▷ Cashier** (the Manager can also
-  perform every Cashier use case).
+- **Generalization** (▷ solid, hollow triangle): **Manager ▷ Cashier**.
 - **`<<include>>`** (dashed arrow, base → included). On the booking diagram:
   - `Add Booking` ──▷ `Select Seat`
   - `Add Booking` ──▷ `Add Payment`
@@ -229,7 +236,7 @@ repetitive (template below); the business operations are fully detailed. Example
 > **Repeat the CRUD template** for every Add/Update/Delete/Search use case of Movie, Genre,
 > Hall, Showtime, Customer, Staff, Booking, Ticket, Payment, Snack, Promotion. Write full
 > specifications (like above) for the business operations: Post/Unpost Showtime, Select Seat,
-> Apply Promotion, Add Payment, Generate Ticket, Issue Refund, the three reports, Manage User
+> Apply Promotion, Add Payment, Generate Ticket, Issue Refund, the two reports, Manage User
 > Roles, Login, Logout.
 
 ---
@@ -263,7 +270,6 @@ Each management form also has *Add / Update / Delete / Search* buttons and a res
 - **Payment receipt:** receipt no., amount, method, date.
 - **Sales Report:** tickets sold and revenue for a period, grand total.
 - **Hall Occupancy Report:** per showtime, seats sold / capacity / occupancy %.
-- **Daily Revenue Report:** revenue per day.
 - **Error dialogs:** invalid login, duplicate title, showtime clash, seat already sold.
 
 ---

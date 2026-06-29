@@ -50,7 +50,7 @@ use_cases = [
     ("Add Movie", "Manager"),
     ("Update Movie", "Manager"),
     ("Delete Movie", "Manager"),
-    ("Search Movie by Title, Genre, Language", "Manager, Cashier"),
+    ("Search Movie by Title, Genre, Language", "Cashier"),
     ("Add Genre", "Manager"),
     ("Update Genre", "Manager"),
     ("Delete Genre", "Manager"),
@@ -62,7 +62,7 @@ use_cases = [
     ("Add Showtime", "Manager"),
     ("Update Showtime", "Manager"),
     ("Delete Showtime", "Manager"),
-    ("Search Showtime by Date, Movie, Hall, Time", "Manager, Cashier"),
+    ("Search Showtime by Date, Movie, Hall, Time", "Cashier"),
     ("Add Customer", "Cashier"),
     ("Update Customer", "Cashier"),
     ("Delete Customer", "Manager"),
@@ -71,10 +71,10 @@ use_cases = [
     ("Update Staff", "Manager"),
     ("Delete Staff", "Manager"),
     ("Search Staff by Id, Name, Role", "Manager"),
-    ("Add Booking", "Cashier, Customer (secondary)"),
+    ("Add Booking", "Cashier (primary), Customer (secondary)"),
     ("Update Booking", "Cashier"),
     ("Delete Booking", "Cashier"),
-    ("Search Booking by Id, Customer, Date, Showtime", "Cashier, Manager"),
+    ("Search Booking by Id, Customer, Date, Showtime", "Cashier"),
     ("Add Ticket", "Cashier"),
     ("Update Ticket", "Cashier"),
     ("Delete Ticket", "Cashier"),
@@ -82,28 +82,27 @@ use_cases = [
     ("Add Payment", "Cashier"),
     ("Update Payment", "Cashier"),
     ("Delete Payment", "Manager"),
-    ("Search Payment by Id, Date, Method, Customer", "Cashier, Manager"),
+    ("Search Payment by Id, Date, Method, Customer", "Cashier"),
     ("Add Snack", "Manager"),
     ("Update Snack", "Manager"),
     ("Delete Snack", "Manager"),
-    ("Search Snack by Name, Category", "Cashier, Manager"),
+    ("Search Snack by Name, Category", "Cashier"),
     ("Add Promotion", "Manager"),
     ("Update Promotion", "Manager"),
     ("Delete Promotion", "Manager"),
-    ("Search Promotion by Code, Period", "Cashier, Manager"),
+    ("Search Promotion by Code, Period", "Cashier"),
     ("Post Showtime", "Manager"),
     ("Unpost Showtime", "Manager"),
-    ("Select Seat", "Cashier, Customer (secondary)"),
+    ("Select Seat", "Cashier (primary), Customer (secondary)"),
     ("Apply Promotion to Booking", "Cashier"),
     ("Generate Ticket", "Cashier"),
     ("Validate Ticket at Entrance", "Cashier"),
-    ("Issue Refund", "Cashier, Manager"),
+    ("Issue Refund", "Cashier"),
     ("Generate Sales Report", "Manager"),
     ("Generate Hall Occupancy Report", "Manager"),
-    ("Generate Daily Revenue Report", "Manager"),
     ("Manage User Roles", "Manager"),
-    ("Login", "Manager, Cashier"),
-    ("Logout", "Manager, Cashier"),
+    ("Login", "Cashier"),
+    ("Logout", "Cashier"),
 ]
 for i, (uc, actor) in enumerate(use_cases, start=1):
     ws.append([i, uc, actor])
@@ -171,7 +170,7 @@ note = ws2.cell(row=r + 1, column=1,
                 value="Replicate the CRUD template for every Add/Update/Delete/Search use case of Movie, Genre, "
                       "Hall, Showtime, Customer, Staff, Booking, Ticket, Payment, Snack, Promotion. Write full "
                       "specs for Post/Unpost Showtime, Select Seat, Apply Promotion, Add Payment, Generate Ticket, "
-                      "Issue Refund, the three reports, Manage User Roles, Login, Logout.")
+                      "Issue Refund, the two reports, Manage User Roles, Login, Logout.")
 note.font = Font(italic=True, color="808080")
 note.alignment = WRAP
 ws2.merge_cells(start_row=r + 1, start_column=1, end_row=r + 1, end_column=2)
