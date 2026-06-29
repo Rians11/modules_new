@@ -39,19 +39,20 @@ No,Use Case,Actor
 38,Update Snack,Manager
 39,Delete Snack,Manager
 40,"Search Snack by Name, Category",Cashier
-41,Add Promotion,Manager
-42,Update Promotion,Manager
-43,Delete Promotion,Manager
-44,"Search Promotion by Code, Period",Cashier
-45,Post Showtime,Manager
-46,Unpost Showtime,Manager
-47,Select Seat,Cashier
-48,Apply Promotion to Booking,Cashier
-49,Generate Ticket,Cashier
-50,Validate Ticket at Entrance,Cashier
-51,Issue Refund,Cashier
-52,Generate Sales Report,Manager
-53,Generate Hall Occupancy Report,Manager
-54,Manage User Roles,Manager
-55,Login,Cashier
-56,Logout,Cashier
+41,Sell Snack,Cashier
+42,Add Promotion,Manager
+43,Update Promotion,Manager
+44,Delete Promotion,Manager
+45,"Search Promotion by Code, Period",Cashier
+46,Post Showtime,Manager
+47,Unpost Showtime,Manager
+48,Select Seat,Cashier
+49,Apply Promotion to Booking,Cashier
+50,Generate Ticket,Cashier
+51,Validate Ticket at Entrance,Cashier
+52,Issue Refund,Cashier
+53,Generate Sales Report,Manager
+54,Generate Hall Occupancy Report,Manager
+55,Manage User Roles,Manager
+56,Login,Cashier
+57,Logout,Cashier

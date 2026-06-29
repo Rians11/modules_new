@@ -87,6 +87,7 @@ use_cases = [
     ("Update Snack", "Manager"),
     ("Delete Snack", "Manager"),
     ("Search Snack by Name, Category", "Cashier"),
+    ("Sell Snack", "Cashier"),
     ("Add Promotion", "Manager"),
     ("Update Promotion", "Manager"),
     ("Delete Promotion", "Manager"),
@@ -124,14 +125,14 @@ specs = [
      "4. (optional) Apply a promotion (extend Apply Promotion). 5. Show total and take payment (include "
      "Add Payment). 6. Save booking and issue ticket (include Generate Ticket); mark seats sold.",
      "2a. Seat already sold -> choose another seat. 5a. Payment fails -> release seats, no ticket."),
-    ("UC-50", "Validate Ticket at Entrance", "Cashier",
+    ("UC-51", "Validate Ticket at Entrance", "Cashier",
      "Checks a presented ticket is valid for the current showtime and marks it used.",
      "Cashier is logged in; the ticket exists.",
      "Ticket marked Used; entry granted or refused.",
      "1. Scan/enter the ticket code. 2. Find ticket and showtime. 3. Check valid, right showtime, not used. "
      "4. Mark Used and show 'Access granted' with the seat number.",
      "3a. Already used / wrong showtime -> 'Invalid ticket', refuse entry."),
-    ("UC-52", "Generate Sales Report", "Manager",
+    ("UC-53", "Generate Sales Report", "Manager",
      "Produces a report of tickets sold and revenue for a chosen period.",
      "Manager is logged in.",
      "A report is displayed/printed.",
@@ -170,7 +171,7 @@ note = ws2.cell(row=r + 1, column=1,
                 value="Replicate the CRUD template for every Add/Update/Delete/Search use case of Movie, Genre, "
                       "Hall, Showtime, Customer, Staff, Booking, Ticket, Payment, Snack, Promotion. Write full "
                       "specs for Post/Unpost Showtime, Select Seat, Apply Promotion, Add Payment, Generate Ticket, "
-                      "Issue Refund, the two reports, Manage User Roles, Login, Logout.")
+                      "Sell Snack, Issue Refund, the two reports, Manage User Roles, Login, Logout.")
 note.font = Font(italic=True, color="808080")
 note.alignment = WRAP
 ws2.merge_cells(start_row=r + 1, start_column=1, end_row=r + 1, end_column=2)

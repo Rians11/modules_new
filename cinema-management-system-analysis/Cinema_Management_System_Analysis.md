@@ -5,7 +5,7 @@
 
 > This report follows the **same structure as the Student Management System example** given by
 > the lecturer: full CRUD (Add / Update / Delete / Search) for every entity, plus business
-> operations (Post/Unpost, Generate reports, …) and Login/Logout. **56 use cases, 3 actors,
+> operations (Post/Unpost, Generate reports, …) and Login/Logout. **57 use cases, 2 actors,
 > 12 tables.** Each use case has a single primary actor; the **Manager ▷ Cashier**
 > generalization means the Manager also performs every Cashier use case.
 
@@ -92,28 +92,29 @@ an actor, because they never operate the system — their details are entered by
 | 38 | Update Snack | Manager |
 | 39 | Delete Snack | Manager |
 | 40 | Search Snack by Name, Category | Cashier |
-| 41 | Add Promotion | Manager |
-| 42 | Update Promotion | Manager |
-| 43 | Delete Promotion | Manager |
-| 44 | Search Promotion by Code, Period | Cashier |
-| 45 | Post Showtime | Manager |
-| 46 | Unpost Showtime | Manager |
-| 47 | Select Seat | Cashier |
-| 48 | Apply Promotion to Booking | Cashier |
-| 49 | Generate Ticket | Cashier |
-| 50 | Validate Ticket at Entrance | Cashier |
-| 51 | Issue Refund | Cashier |
-| 52 | Generate Sales Report | Manager |
-| 53 | Generate Hall Occupancy Report | Manager |
-| 54 | Manage User Roles | Manager |
-| 55 | Login | Cashier |
-| 56 | Logout | Cashier |
+| 41 | Sell Snack | Cashier |
+| 42 | Add Promotion | Manager |
+| 43 | Update Promotion | Manager |
+| 44 | Delete Promotion | Manager |
+| 45 | Search Promotion by Code, Period | Cashier |
+| 46 | Post Showtime | Manager |
+| 47 | Unpost Showtime | Manager |
+| 48 | Select Seat | Cashier |
+| 49 | Apply Promotion to Booking | Cashier |
+| 50 | Generate Ticket | Cashier |
+| 51 | Validate Ticket at Entrance | Cashier |
+| 52 | Issue Refund | Cashier |
+| 53 | Generate Sales Report | Manager |
+| 54 | Generate Hall Occupancy Report | Manager |
+| 55 | Manage User Roles | Manager |
+| 56 | Login | Cashier |
+| 57 | Logout | Cashier |
 
 ---
 
 ## 3. Use Case Diagram(s) — to draw in StarUML (25 marks)
 
-With 56 use cases, draw **one diagram per subsystem** (the example also allows "diagram(s)").
+With 57 use cases, draw **one diagram per subsystem** (the example also allows "diagram(s)").
 This is cleaner and easier to mark.
 
 ### Actors
@@ -129,11 +130,11 @@ This is cleaner and easier to mark.
 
 ### Suggested sub-diagrams (one Use Case Diagram each)
 1. **Movie & Genre Management** — UC 1–8. Actors: Manager (UC 4 → Cashier).
-2. **Hall & Showtime Management** — UC 9–16, 45–46. Actors: Manager (UC 16 → Cashier).
+2. **Hall & Showtime Management** — UC 9–16, 46–47. Actors: Manager (UC 16 → Cashier).
 3. **Customer & Staff Management** — UC 17–24. Actors: Cashier (customers), Manager (staff).
-4. **Booking, Ticket & Payment** — UC 25–36, 47–51. Actor: Cashier (all use cases).
-5. **Snack & Promotion** — UC 37–44. Actors: Manager (CRUD), Cashier (searches, Apply Promotion).
-6. **Reporting & Security** — UC 52–56. Actors: Manager (reports, roles), Cashier (Login/Logout).
+4. **Booking, Ticket & Payment** — UC 25–36, 48–52. Actor: Cashier (all use cases).
+5. **Snack & Promotion** — UC 37–45. Actors: Manager (CRUD), Cashier (Search Snack, Sell Snack, Search Promotion).
+6. **Reporting & Security** — UC 53–57. Actors: Manager (reports, roles), Cashier (Login/Logout).
 
 ### Relationships that earn the marks (very important)
 - **Generalization** (▷ solid, hollow triangle): **Manager ▷ Cashier**.
@@ -182,11 +183,11 @@ repetitive (template below); the business operations are fully detailed. Example
 
 ---
 
-### UC-50 — Validate Ticket at Entrance
+### UC-51 — Validate Ticket at Entrance
 
 | Field | Description |
 |-------|-------------|
-| **Use Case ID** | UC-50 |
+| **Use Case ID** | UC-51 |
 | **Use Case Name** | Validate Ticket at Entrance |
 | **Actor(s)** | Cashier |
 | **Description** | Checks that a presented ticket is valid for the current showtime and marks it used. |
@@ -204,11 +205,11 @@ repetitive (template below); the business operations are fully detailed. Example
 
 ---
 
-### UC-52 — Generate Sales Report
+### UC-53 — Generate Sales Report
 
 | Field | Description |
 |-------|-------------|
-| **Use Case ID** | UC-52 |
+| **Use Case ID** | UC-53 |
 | **Use Case Name** | Generate Sales Report |
 | **Actor(s)** | Manager |
 | **Description** | Produces a report of tickets sold and revenue for a chosen period. |
@@ -238,8 +239,8 @@ repetitive (template below); the business operations are fully detailed. Example
 > **Repeat the CRUD template** for every Add/Update/Delete/Search use case of Movie, Genre,
 > Hall, Showtime, Customer, Staff, Booking, Ticket, Payment, Snack, Promotion. Write full
 > specifications (like above) for the business operations: Post/Unpost Showtime, Select Seat,
-> Apply Promotion, Add Payment, Generate Ticket, Issue Refund, the two reports, Manage User
-> Roles, Login, Logout.
+> Apply Promotion, Add Payment, Generate Ticket, Sell Snack, Issue Refund, the two reports,
+> Manage User Roles, Login, Logout.
 
 ---
 
@@ -256,7 +257,8 @@ repetitive (template below); the business operations are fully detailed. Example
 - **Staff:** Full Name | Username | Password | Role (Manager/Cashier).
 - **Booking / Seat selection:** Showtime (dropdown) | Seat map | Customer | Promotion code | Total.
 - **Payment:** Amount Due | Method (Card/Mobile/Cash).
-- **Snack:** Name | Category | Price.
+- **Snack:** Name | Category | Price (Manager manages the menu).
+- **Sell Snack:** Booking (dropdown) | Snack (dropdown) | Quantity | Line Total → *Sell* (Cashier).
 - **Promotion:** Code | Description | Discount % | Start Date | End Date.
 
 Each management form also has *Add / Update / Delete / Search* buttons and a results table.
