@@ -84,6 +84,8 @@ body.append(para("Note: the other data-entry forms (Add Genre, Add Cinema Hall, 
                  "Add Customer, Add Snack, Add Promotion) follow the same layout as the Add Movie form."))
 body.append(para())
 body.append(para("Dialog Boxes", bold=True, size=26))
+body.append(para("The system uses three types of dialog box: confirmation (Yes/No), error/alert (OK) "
+                 "and information/success (OK)."))
 body.append(form_box("Confirm Booking",
                      ["Would you confirm the booking of 2 seats for \"Avengers\" (15/04/2025, 17h00)?"],
                      "[ Confirm ]   [ Cancel ]"))
@@ -91,6 +93,14 @@ body.append(para())
 body.append(form_box("Delete Movie",
                      ["Are you sure you want to delete this movie? This action is irreversible."],
                      "[ Yes (Delete) ]   [ No ]"))
+body.append(para())
+body.append(form_box("Error",
+                     ["Seat already booked - please choose another seat."],
+                     "[ OK ]"))
+body.append(para())
+body.append(form_box("Success",
+                     ["Ticket booked successfully. Seat B2, B3 - Total 40.00."],
+                     "[ OK ]"))
 
 # ---- Section 6 : Output ----
 body.append(pagebreak())
