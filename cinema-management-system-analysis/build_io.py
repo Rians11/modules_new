@@ -1,111 +1,87 @@
-"""Generate a clean, consistent Input & Output Design section (HTML -> PDF)."""
+"""Generate a simple, Word-style Input & Output Design section (HTML -> PDF).
+Plain black & white, like a basic Microsoft Word document."""
+
+U = "________________"   # underscore field
 
 HTML = r"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-@page { size: A4; margin: 1.8cm; }
-body { font-family:'Liberation Sans',Arial,sans-serif; color:#111; font-size:11pt; }
-h1 { color:#1F3864; font-size:19pt; border-bottom:3px solid #4472C4; padding-bottom:4px; }
-h2 { color:#1F3864; font-size:14pt; margin-top:20px; }
-.note { background:#fff7e6; border-left:4px solid #d9a200; padding:6px 10px; font-size:10pt; }
-.row { display:flex; flex-wrap:wrap; gap:18px; }
-.form { border:2px solid #333; border-radius:6px; width:300px; margin:10px 0; }
-.form .title { background:#333; color:#fff; font-weight:bold; text-align:center; padding:6px; }
-.form .body { padding:12px 14px; }
-.field { margin:9px 0; font-size:10.5pt; }
-.field .lbl { display:inline-block; width:118px; }
-.box { display:inline-block; border-bottom:1.5px solid #555; min-width:130px; }
-.drop { display:inline-block; border:1px solid #555; border-radius:3px; padding:1px 18px 1px 6px;
-        min-width:120px; position:relative; }
-.drop:after { content:"\25BC"; position:absolute; right:5px; font-size:7pt; top:5px; }
-.btns { text-align:center; margin-top:12px; }
-.btn { display:inline-block; border:1.5px solid #333; border-radius:4px; padding:4px 14px; margin:0 5px;
-       font-weight:bold; background:#eee; }
-.dialog { border:2px solid #333; border-radius:8px; width:360px; margin:12px 0; padding:0; }
-.dialog .bar { background:#4472C4; color:#fff; padding:5px 10px; font-weight:bold; border-radius:6px 6px 0 0; }
-.dialog .msg { padding:14px; font-size:10.5pt; }
-table { border-collapse:collapse; width:100%; margin:8px 0 14px 0; }
-th,td { border:1px solid #555; padding:5px 8px; text-align:left; font-size:10pt; }
-th { background:#e8edf7; }
-.ticket { border:2px dashed #333; border-radius:8px; width:300px; padding:12px 16px; margin:10px 0; }
-.ticket .t { text-align:center; font-weight:bold; color:#1F3864; border-bottom:1px solid #999; padding-bottom:5px; margin-bottom:8px; }
-.seatmap td { text-align:center; width:34px; height:26px; font-weight:bold; }
-.av { background:#d6f5d6; } .sold { background:#f5d0d0; } .sel { background:#cfe0fb; }
-.legend span { display:inline-block; padding:2px 8px; margin-right:8px; border:1px solid #999; font-size:9.5pt; }
+@page { size: A4; margin: 2cm; }
+body { font-family:'Calibri','Liberation Sans',Arial,sans-serif; color:#000; font-size:12pt; line-height:1.5; }
+h1 { font-size:16pt; font-weight:bold; }
+h2 { font-size:13pt; font-weight:bold; margin-top:18px; }
+.box { border:1px solid #000; width:330px; margin:14px auto; padding:14px 22px; }
+.box .ttl { text-align:center; font-weight:bold; margin-bottom:12px; letter-spacing:1px; }
+.box .f { margin:7px 0; }
+.box .b { text-align:center; margin-top:12px; font-weight:bold; }
+table { border-collapse:collapse; width:100%; margin:8px 0 16px 0; }
+th,td { border:1px solid #000; padding:5px 9px; text-align:left; font-size:11pt; }
+th { font-weight:bold; }
+.ticket { border:1px solid #000; width:300px; margin:10px auto; padding:14px 20px; }
+.ticket .ttl { text-align:center; font-weight:bold; border-bottom:1px solid #000; padding-bottom:6px; margin-bottom:8px; }
+.center { text-align:center; }
 .pb { page-break-before: always; }
-small { color:#555; }
+p.small { font-size:11pt; }
 </style></head><body>
 
 <h1>5. Input Design (Forms / Dialog Boxes)</h1>
-<p class="note">Each form's fields match the database exactly (e.g. a movie has Title, Genre,
-Duration, Language, Rating — no price and no release date, since the price belongs to the showtime).</p>
 
-<div class="row">
-
-  <div class="form"><div class="title">LOGIN</div><div class="body">
-    <div class="field"><span class="lbl">Username</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Password</span><span class="box">&nbsp;</span></div>
-    <div class="btns"><span class="btn">Login</span></div>
-  </div></div>
-
-  <div class="form"><div class="title">ADD MOVIE</div><div class="body">
-    <div class="field"><span class="lbl">Title</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Genre</span><span class="drop">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Duration (min)</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Language</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Rating</span><span class="box">&nbsp;</span></div>
-    <div class="btns"><span class="btn">Add</span><span class="btn">Update</span><span class="btn">Delete</span></div>
-  </div></div>
-
-  <div class="form"><div class="title">ADD SHOWTIME</div><div class="body">
-    <div class="field"><span class="lbl">Movie</span><span class="drop">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Cinema Hall</span><span class="drop">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Date</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Time</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Ticket Price</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Status</span><span class="drop">Posted&nbsp;</span></div>
-    <div class="btns"><span class="btn">Save</span></div>
-  </div></div>
-
-  <div class="form"><div class="title">ADD CUSTOMER</div><div class="body">
-    <div class="field"><span class="lbl">Full Name</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Phone</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Email</span><span class="box">&nbsp;</span></div>
-    <div class="btns"><span class="btn">Add</span></div>
-  </div></div>
-
-  <div class="form"><div class="title">BOOK TICKET (Add Booking)</div><div class="body">
-    <div class="field"><span class="lbl">Showtime</span><span class="drop">Movie / Date / Time&nbsp;</span></div>
-    <div class="field"><span class="lbl">Seat Number</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Customer Name</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Customer Phone</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Payment Method</span><span class="drop">Card&nbsp;</span></div>
-    <div class="field"><span class="lbl">Total</span><span class="box">&nbsp;</span> <small>(auto)</small></div>
-    <div class="btns"><span class="btn">Book</span></div>
-  </div></div>
-
-  <div class="form"><div class="title">SELL SNACK</div><div class="body">
-    <div class="field"><span class="lbl">Snack</span><span class="drop">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Quantity</span><span class="box">&nbsp;</span></div>
-    <div class="field"><span class="lbl">Total</span><span class="box">&nbsp;</span> <small>(auto)</small></div>
-    <div class="btns"><span class="btn">Sell</span></div>
-  </div></div>
-
+<div class="box">
+  <div class="ttl">LOGIN</div>
+  <div class="f">Username : """ + U + """</div>
+  <div class="f">Password : """ + U + """</div>
+  <div class="b">[ Login ]</div>
 </div>
+
+<div class="box">
+  <div class="ttl">ADD MOVIE</div>
+  <div class="f">Title : """ + U + """</div>
+  <div class="f">Genre : """ + U + """</div>
+  <div class="f">Duration : """ + U + """</div>
+  <div class="f">Language : """ + U + """</div>
+  <div class="f">Rating : """ + U + """</div>
+  <div class="b">[ Add ]&nbsp;&nbsp;[ Update ]&nbsp;&nbsp;[ Delete ]</div>
+</div>
+
+<div class="box">
+  <div class="ttl">ADD SHOWTIME</div>
+  <div class="f">Movie : """ + U + """</div>
+  <div class="f">Cinema Hall : """ + U + """</div>
+  <div class="f">Date : """ + U + """</div>
+  <div class="f">Time : """ + U + """</div>
+  <div class="f">Ticket Price : """ + U + """</div>
+  <div class="b">[ Save ]</div>
+</div>
+
+<div class="box">
+  <div class="ttl">BOOK TICKET</div>
+  <div class="f">Customer Name : """ + U + """</div>
+  <div class="f">Phone Number : """ + U + """</div>
+  <div class="f">Showtime (Movie / Date / Time) : """ + U + """</div>
+  <div class="f">Seat Number : """ + U + """</div>
+  <div class="f">Payment Method : """ + U + """</div>
+  <div class="b">[ Book ]</div>
+</div>
+
+<p class="small"><i>Note: the other data-entry forms (Add Genre, Add Cinema Hall, Add Staff,
+Add Customer, Add Snack, Add Promotion) follow the same layout as the Add Movie form above.</i></p>
 
 <h2>Dialog Boxes</h2>
-<div class="row">
-  <div class="dialog"><div class="bar">Confirm Booking</div>
-    <div class="msg">Confirm the booking of <b>2 seats</b> for <b>Avengers</b> (15/04/2025, 17h00)?
-      <div class="btns"><span class="btn">Confirm</span><span class="btn">Cancel</span></div></div></div>
 
-  <div class="dialog"><div class="bar">Delete Movie</div>
-    <div class="msg">Are you sure you want to delete this movie? This action cannot be undone.
-      <div class="btns"><span class="btn">Yes (Delete)</span><span class="btn">No</span></div></div></div>
+<div class="box" style="width:380px">
+  <div class="ttl">Confirm Booking</div>
+  <div class="center">Would you confirm the booking of 2 seats for "Avengers" (15/04/2025, 17h00)?</div>
+  <div class="b">[ Confirm ]&nbsp;&nbsp;[ Cancel ]</div>
 </div>
 
-<!-- ===================== OUTPUT ===================== -->
+<div class="box" style="width:380px">
+  <div class="ttl">Delete Movie</div>
+  <div class="center">Are you sure you want to delete this movie? This action is irreversible.</div>
+  <div class="b">[ Yes (Delete) ]&nbsp;&nbsp;[ No ]</div>
+</div>
+
+<!-- ====================== OUTPUT ====================== -->
 <h1 class="pb">6. Output Design (Screen / Paper)</h1>
 
-<h2>O1 — Movie List (screen)</h2>
+<h2>Movie List</h2>
 <table>
 <tr><th>ID</th><th>Title</th><th>Genre</th><th>Duration</th><th>Rating</th></tr>
 <tr><td>1</td><td>Avengers</td><td>Action</td><td>143 min</td><td>PG-13</td></tr>
@@ -114,59 +90,42 @@ Duration, Language, Rating — no price and no release date, since the price bel
 <tr><td>4</td><td>Afterburn</td><td>Comedy</td><td>98 min</td><td>PG-13</td></tr>
 </table>
 
-<h2>O2 — Showtimes List (screen)</h2>
-<table>
-<tr><th>Movie</th><th>Hall</th><th>Date</th><th>Time</th><th>Price</th></tr>
-<tr><td>Avengers</td><td>Hall 4</td><td>15/04/2025</td><td>17h00</td><td>20.00</td></tr>
-<tr><td>Scream</td><td>Hall 1</td><td>15/04/2025</td><td>19h00</td><td>18.00</td></tr>
+<h2>Seat Map (plan of the room)</h2>
+<p class="small">Rows A, B, C and columns 1-5. Colour code: Green = available, Red = sold, Blue = selected.</p>
+<table style="width:auto">
+<tr><th>&nbsp;</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+<tr><th>A</th><td>A1</td><td>A2</td><td>A3 (sold)</td><td>A4</td><td>A5</td></tr>
+<tr><th>B</th><td>B1</td><td>B2 (sel)</td><td>B3 (sel)</td><td>B4 (sold)</td><td>B5</td></tr>
+<tr><th>C</th><td>C1</td><td>C2</td><td>C3</td><td>C4</td><td>C5 (sold)</td></tr>
 </table>
 
-<h2>O3 — Seat Map (screen)</h2>
-<p class="legend"><span class="av">Green = available</span><span class="sold">Red = sold</span><span class="sel">Blue = selected</span></p>
-<table class="seatmap" style="width:auto">
-<tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
-<tr><th>A</th><td class="av">A1</td><td class="av">A2</td><td class="sold">A3</td><td class="av">A4</td><td class="av">A5</td></tr>
-<tr><th>B</th><td class="av">B1</td><td class="sel">B14</td><td class="sel">B15</td><td class="sold">B4</td><td class="av">B5</td></tr>
-<tr><th>C</th><td class="av">C1</td><td class="av">C2</td><td class="av">C3</td><td class="av">C4</td><td class="sold">C5</td></tr>
-</table>
-
-<h2>O4 — Booking Summary (before payment)</h2>
+<h2>Booking Summary (before payment)</h2>
 <table>
 <tr><th>Film</th><th>Showtime</th><th>Seats</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr>
-<tr><td>Avengers</td><td>15/04/2025 17h00 — Hall 4</td><td>B14, B15</td><td>2</td><td>20.00</td><td><b>40.00</b></td></tr>
+<tr><td>Avengers</td><td>15/04/2025 17h00 - Hall 4</td><td>B2, B3</td><td>2</td><td>20.00</td><td>40.00</td></tr>
 </table>
 
-<h2>O5 — Ticket (printout)</h2>
+<h2>Ticket (printout)</h2>
 <div class="ticket">
-  <div class="t">CINEMA MANAGEMENT SYSTEM</div>
-  <div class="field"><span class="lbl">Movie</span> Avengers</div>
-  <div class="field"><span class="lbl">Hall</span> 4</div>
-  <div class="field"><span class="lbl">Date</span> 15/04/2025</div>
-  <div class="field"><span class="lbl">Time</span> 17h00</div>
-  <div class="field"><span class="lbl">Seat</span> B14, B15</div>
-  <div class="field"><span class="lbl">Price</span> 40.00</div>
-  <div class="field"><span class="lbl">Ticket No.</span> 10066</div>
+  <div class="ttl">CINEMA MANAGEMENT SYSTEM</div>
+  <div class="f">Movie : Avengers</div>
+  <div class="f">Room : 4</div>
+  <div class="f">Date : 15/04/2025</div>
+  <div class="f">Time : 17h00</div>
+  <div class="f">Seat : B2, B3</div>
+  <div class="f">N&deg; Ticket : 10066</div>
 </div>
 
-<h2>O6 — Sales Report (paper)</h2>
+<h2>Sales Report (paper)</h2>
 <table>
 <tr><th>Date</th><th>Movie</th><th>Tickets Sold</th><th>Revenue</th></tr>
 <tr><td>15/04/2025</td><td>Avengers</td><td>120</td><td>2,400.00</td></tr>
 <tr><td>15/04/2025</td><td>Scream</td><td>80</td><td>1,440.00</td></tr>
-<tr><td colspan="2"><b>Grand Total</b></td><td><b>200</b></td><td><b>3,840.00</b></td></tr>
-</table>
-
-<h2>O7 — Error / Message dialogs</h2>
-<table>
-<tr><th>Situation</th><th>Message shown</th></tr>
-<tr><td>Invalid login</td><td>"Invalid login credentials."</td></tr>
-<tr><td>Duplicate movie title</td><td>"This movie already exists."</td></tr>
-<tr><td>Seat already sold</td><td>"Seat already booked — please choose another."</td></tr>
-<tr><td>Booking confirmed</td><td>"Ticket booked. Seat B14, B15 — Total 40.00."</td></tr>
+<tr><td>Total</td><td>&nbsp;</td><td>200</td><td>3,840.00</td></tr>
 </table>
 
 </body></html>"""
 
 with open("IO_Design.html", "w") as f:
     f.write(HTML)
-print("Saved IO_Design.html")
+print("Saved IO_Design.html (Word style)")
