@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mes mains sur le piano</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Comic Sans MS','Segoe UI',sans-serif;background:#FFF7E6}
+  .page{width:297mm;height:210mm;position:relative;overflow:hidden;page-break-after:always;background:#FFF7E6;padding:10mm 14mm}
+  .page:last-child{page-break-after:auto}
+
+  h1{text-align:center;font-size:34px;color:#7A2E8E;letter-spacing:1px}
+  .sub{text-align:center;font-size:17px;color:#555;margin-top:4px;margin-bottom:10px}
+
+  .row{display:flex;justify-content:center;gap:26px;margin-top:6px}
+  .handbox{text-align:center;width:340px}
+  .handbox .label{font-size:22px;font-weight:bold;border-radius:14px;padding:8px 0;margin-bottom:8px;color:#fff}
+  .droite .label{background:#E5484D}
+  .gauche .label{background:#3B82F6}
+
+  /* Hand illustration with numbered fingers */
+  .hand{position:relative;width:300px;height:230px;margin:0 auto}
+  .palm{position:absolute;bottom:0;left:70px;width:160px;height:120px;background:#FBCFA0;border-radius:60px 60px 40px 40px;border:3px solid #B5793F}
+  .finger{position:absolute;bottom:95px;width:34px;border-radius:16px;background:#FBCFA0;border:3px solid #B5793F;display:flex;align-items:flex-start;justify-content:center;color:#fff;font-weight:bold;font-size:18px}
+  .finger .num{background:#7A2E8E;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;margin-top:4px}
+  /* right hand: thumb (1) at right, pinky (5) at left, mirrored for left hand via class */
+  .f1{height:90px}
+  .f2{height:150px}
+  .f3{height:170px}
+  .f4{height:160px}
+  .f5{height:120px}
+
+  .droite .f1{left:230px;bottom:100px}
+  .droite .f2{left:190px}
+  .droite .f3{left:150px}
+  .droite .f4{left:110px}
+  .droite .f5{left:70px;bottom:110px}
+
+  .gauche .f1{left:70px;bottom:100px}
+  .gauche .f2{left:110px}
+  .gauche .f3{left:150px}
+  .gauche .f4{left:190px}
+  .gauche .f5{left:230px;bottom:110px}
+
+  .note{text-align:center;font-size:16px;color:#7A2E8E;font-weight:bold;margin-top:6px}
+
+  /* keyboard */
+  .keyboard-wrap{margin-top:76px;display:flex;justify-content:center}
+  .keyboard{position:relative;width:660px;height:170px}
+  .white{position:absolute;bottom:0;width:60px;height:170px;background:#fff;border:2px solid #333;border-radius:0 0 8px 8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-weight:bold;font-size:16px;color:#333}
+  .white.mid{background:#FFE9A8;border-color:#C9A227}
+  .black{position:absolute;top:0;width:36px;height:100px;background:#222;border-radius:0 0 6px 6px;z-index:2}
+  .fingertip{position:absolute;top:-44px;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:bold;font-size:16px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;z-index:3}
+  .fingertip.d{background:#E5484D}
+  .fingertip.g{background:#3B82F6}
+  .caption{text-align:center;font-size:15px;color:#444;margin-top:26px;line-height:1.5}
+  .legend{display:flex;justify-content:center;gap:30px;margin-top:10px;font-size:15px;font-weight:bold}
+  .dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  .footer{position:absolute;bottom:8mm;left:0;right:0;text-align:center;font-size:12px;color:#999}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 : Les deux mains, doigts numérotés -->
+<div class="page">
+  <h1>🎹 Mes mains sur le piano 🎹</h1>
+  <p class="sub">Regarde bien : chaque doigt a un numéro, de 1 à 5 !</p>
+
+  <div class="row">
+    <div class="handbox gauche">
+      <div class="label">MAIN GAUCHE</div>
+      <div class="hand">
+        <div class="palm"></div>
+        <div class="finger f1"><span class="num">1</span></div>
+        <div class="finger f2"><span class="num">2</span></div>
+        <div class="finger f3"><span class="num">3</span></div>
+        <div class="finger f4"><span class="num">4</span></div>
+        <div class="finger f5"><span class="num">5</span></div>
+      </div>
+      <div class="note">Le pouce (1) est à droite de cette main</div>
+    </div>
+
+    <div class="handbox droite">
+      <div class="label">MAIN DROITE</div>
+      <div class="hand">
+        <div class="palm"></div>
+        <div class="finger f1"><span class="num">1</span></div>
+        <div class="finger f2"><span class="num">2</span></div>
+        <div class="finger f3"><span class="num">3</span></div>
+        <div class="finger f4"><span class="num">4</span></div>
+        <div class="finger f5"><span class="num">5</span></div>
+      </div>
+      <div class="note">Le pouce (1) est à gauche de cette main</div>
+    </div>
+  </div>
+
+  <p class="caption">Astuce pour l'enfant : les deux pouces (doigt 1) se rejoignent toujours <b>au milieu</b> du piano,<br>tout près l'un de l'autre, comme deux amis qui se disent bonjour !</p>
+  <div class="footer">KLP Studio — Kenny Leonore Productions · Fiche pour enfant 4 ans</div>
+</div>
+
+<!-- PAGE 2 : Placement sur le clavier -->
+<div class="page">
+  <h1>🎵 Où poser mes mains sur le clavier ?</h1>
+  <p class="sub">Trouve la touche <b>DO du milieu</b> (en jaune) : c'est là que les deux pouces se posent !</p>
+
+  <div class="keyboard-wrap">
+    <div class="keyboard" id="kb">
+      <!-- 11 white keys: F3 G3 A3 B3 C4(mid) D4 E4 F4 G4 A4 B4 -->
+      <div class="white" style="left:0">Fa</div>
+      <div class="white" style="left:60px">Sol</div>
+      <div class="white" style="left:120px">La</div>
+      <div class="white" style="left:180px">Si</div>
+      <div class="white mid" style="left:240px">DO</div>
+      <div class="white" style="left:300px">Ré</div>
+      <div class="white" style="left:360px">Mi</div>
+      <div class="white" style="left:420px">Fa</div>
+      <div class="white" style="left:480px">Sol</div>
+      <div class="white" style="left:540px">La</div>
+      <div class="white" style="left:600px">Si</div>
+
+      <!-- black keys: after Fa,Sol,La (x3), after DO,Ré, after Fa,Sol,La (x3) -->
+      <div class="black" style="left:42px"></div>
+      <div class="black" style="left:102px"></div>
+      <div class="black" style="left:162px"></div>
+      <div class="black" style="left:282px"></div>
+      <div class="black" style="left:342px"></div>
+      <div class="black" style="left:462px"></div>
+      <div class="black" style="left:522px"></div>
+      <div class="black" style="left:582px"></div>
+
+      <!-- left hand fingertips (blue) on Fa-Sol-La-Si-DO = fingers 5 4 3 2 1 -->
+      <div class="fingertip g" style="left:13px">5</div>
+      <div class="fingertip g" style="left:73px">4</div>
+      <div class="fingertip g" style="left:133px">3</div>
+      <div class="fingertip g" style="left:193px">2</div>
+      <div class="fingertip g" style="left:246px">1</div>
+
+      <!-- right hand fingertips (red) on DO-Ré-Mi-Fa-Sol = fingers 1 2 3 4 5 -->
+      <div class="fingertip d" style="left:262px">1</div>
+      <div class="fingertip d" style="left:313px">2</div>
+      <div class="fingertip d" style="left:373px">3</div>
+      <div class="fingertip d" style="left:433px">4</div>
+      <div class="fingertip d" style="left:493px">5</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#3B82F6"></span>Main Gauche</span>
+    <span><span class="dot" style="background:#E5484D"></span>Main Droite</span>
+    <span><span class="dot" style="background:#FFE9A8;border:2px solid #C9A227"></span>Touche DO du milieu</span>
+  </div>
+
+  <p class="caption">
+    1. Cherche la touche jaune : le <b>DO du milieu</b> (elle est juste avant un groupe de 2 touches noires).<br>
+    2. Pose le pouce de ta <b>main droite</b> dessus, et le pouce de ta <b>main gauche</b> juste à côté, à gauche.<br>
+    3. Pose ensuite tes autres doigts, un par touche, bien à côté !
+  </p>
+  <div class="footer">KLP Studio — Kenny Leonore Productions · Fiche pour enfant 4 ans</div>
+</div>
+
+</body>
+</html>
